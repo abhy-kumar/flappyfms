@@ -19,11 +19,12 @@ class FlappyGame {
     this.mode = 'classic'; // classic, hardcore, zen
 
     // Physics constants per mode.
-    // pipeGapFrac: gap height as a fraction of canvas height (scales to any screen).
+    // pipeGapFrac:   gap height as fraction of canvas height — always fair on any screen
+    // pipeSpacingPx: constant pixel distance between pipe leading edges (screen-width independent)
     this.modesConfig = {
-      classic:  { gravity: 0.45,  jump: -9,   pipeSpeed: 2.8,  pipeGapFrac: 0.22, pipeIntervalFrames: 90 },
-      hardcore: { gravity: 0.52,  jump: -9.5, pipeSpeed: 3.8,  pipeGapFrac: 0.18, pipeIntervalFrames: 70, movingPipes: true },
-      zen:      { gravity: 0.32,  jump: -8,   pipeSpeed: 2.0,  pipeGapFrac: 0.27, pipeIntervalFrames: 110 }
+      classic:  { gravity: 0.42,  jump: -8.5, pipeSpeed: 2.4,  pipeGapFrac: 0.38, pipeSpacingPx: 320 },
+      hardcore: { gravity: 0.50,  jump: -9.0, pipeSpeed: 3.2,  pipeGapFrac: 0.30, pipeSpacingPx: 270, movingPipes: true },
+      zen:      { gravity: 0.30,  jump: -7.8, pipeSpeed: 1.8,  pipeGapFrac: 0.46, pipeSpacingPx: 370 }
     };
 
     // Game state
@@ -60,8 +61,11 @@ class FlappyGame {
     this.particles = [];
     this.bgStars = [];
     this.clouds = [];
-    this.frameCount = 0;  // logical game frames (60 fps target)
-    this.shakeFrames = 0; // frames of shake remaining
+    this.frameCount = 0;
+    this.shakeFrames = 0;
+    // Distance (in px) scrolled since the last pipe was spawned.
+    // Start at pipeSpacingPx so the first pipe spawns immediately on game start.
+    this.distanceSinceLastPipe = 9999;
 
     this.resizeCanvas();
     this.initBackgroundElements();
@@ -199,6 +203,8 @@ class FlappyGame {
     this.shakeFrames = 0;
     this.feathersCollected = 0;
     this.powerupsCollected = 0;
+    // Set high so the very first pipe spawns the moment PLAYING begins
+    this.distanceSinceLastPipe = 9999;
 
     this.activePowerups.shield = false;
     this.activePowerups.slowmo = false;
@@ -292,9 +298,13 @@ class FlappyGame {
       this.bird.rotation = Math.min(1.3, this.bird.rotation + 0.05 * (dtSec * 60));
     }
 
-    // --- Spawn pipes on frame interval ---
-    const interval = Math.round(cfg.pipeIntervalFrames / speedMult);
-    if (this.frameCount % interval === 0 || this.frameCount === 1) {
+    // --- Distance-based pipe spawning ---
+    // Accumulate pixels scrolled this frame; spawn when threshold is reached.
+    // This guarantees consistent spacing in screen pixels on ANY screen width.
+    const pixelsThisFrame = cfg.pipeSpeed * speedMult * (dtSec * 60);
+    this.distanceSinceLastPipe += pixelsThisFrame;
+    if (this.distanceSinceLastPipe >= cfg.pipeSpacingPx) {
+      this.distanceSinceLastPipe -= cfg.pipeSpacingPx;
       this.spawnPipe();
     }
 
