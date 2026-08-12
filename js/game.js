@@ -18,11 +18,12 @@ class FlappyGame {
     // Mode configuration
     this.mode = 'classic'; // classic, hardcore, zen
 
-    // Physics constants per mode
+    // Physics constants per mode.
+    // pipeGapFrac: gap height as a fraction of canvas height (scales to any screen).
     this.modesConfig = {
-      classic:  { gravity: 0.45,  jump: -9,   pipeSpeed: 2.8,  pipeGap: 145, pipeIntervalFrames: 90 },
-      hardcore: { gravity: 0.52,  jump: -9.5, pipeSpeed: 3.8,  pipeGap: 120, pipeIntervalFrames: 70,  movingPipes: true },
-      zen:      { gravity: 0.32,  jump: -8,   pipeSpeed: 2.0,  pipeGap: 180, pipeIntervalFrames: 110 }
+      classic:  { gravity: 0.45,  jump: -9,   pipeSpeed: 2.8,  pipeGapFrac: 0.22, pipeIntervalFrames: 90 },
+      hardcore: { gravity: 0.52,  jump: -9.5, pipeSpeed: 3.8,  pipeGapFrac: 0.18, pipeIntervalFrames: 70, movingPipes: true },
+      zen:      { gravity: 0.32,  jump: -8,   pipeSpeed: 2.0,  pipeGapFrac: 0.27, pipeIntervalFrames: 110 }
     };
 
     // Game state
@@ -304,13 +305,14 @@ class FlappyGame {
       const pipe = this.pipes[i];
       pipe.x -= cfg.pipeSpeed * speedMult * (dtSec * 60);
 
-      // Moving pipes (hardcore)
+      // Moving pipes (hardcore) — clamp uses the pipe's own gapHeight, scaled to screen
       if (pipe.moving) {
         pipe.gapY += Math.sin(this.frameCount * 0.045 + pipe.offset) * 1.2;
-        // Clamp so gap stays on screen
-        const minGap = 60;
-        const maxGap = groundY - cfg.pipeGap - 60;
-        pipe.gapY = Math.max(minGap, Math.min(maxGap, pipe.gapY));
+        const marginTop    = Math.round(this.height * 0.12);
+        const marginBottom = Math.round(this.height * 0.10);
+        const minGap = marginTop;
+        const maxGap = groundY - pipe.gapHeight - marginBottom;
+        pipe.gapY = Math.max(minGap, Math.min(Math.max(minGap + 10, maxGap), pipe.gapY));
       }
 
       // Score: passed the pipe
@@ -393,17 +395,28 @@ class FlappyGame {
   /* ---------------------------------------------------------------------- */
 
   spawnPipe() {
-    const cfg   = this.modesConfig[this.mode];
+    const cfg     = this.modesConfig[this.mode];
     const groundY = this.height - 65;
-    const minGapY  = 70;
-    const maxGapY  = groundY - cfg.pipeGap - 60;
-    const gapY     = Math.random() * (maxGapY - minGapY) + minGapY;
+
+    // Gap is proportional to canvas height — always fair regardless of screen size
+    const pipeGap = Math.round(this.height * cfg.pipeGapFrac);
+
+    // Reserve headroom at top and bottom so pipes never block the entire column
+    const marginTop    = Math.round(this.height * 0.12);  // 12% from top
+    const marginBottom = Math.round(this.height * 0.10);  // 10% from ground stripe
+
+    const minGapY = marginTop;
+    const maxGapY = groundY - pipeGap - marginBottom;
+
+    // Safety clamp — should never trigger but prevents NaN on extreme screens
+    const safeMaxGapY = Math.max(minGapY + 10, maxGapY);
+    const gapY = Math.random() * (safeMaxGapY - minGapY) + minGapY;
 
     this.pipes.push({
       x:         this.width + 30,
-      width:     68,
-      gapY:      gapY,
-      gapHeight: cfg.pipeGap,
+      width:     62,
+      gapY,
+      gapHeight: pipeGap,
       passed:    false,
       moving:    cfg.movingPipes || false,
       offset:    Math.random() * Math.PI * 2
@@ -415,8 +428,8 @@ class FlappyGame {
       const type     = types[Math.floor(Math.random() * types.length)];
       const colorMap = { feather: '#ffb703', shield: '#00f2fe', slowmo: '#a855f7' };
       this.powerups.push({
-        x:      this.width + 30 + 34,   // centred on pipe
-        y:      gapY + cfg.pipeGap / 2,
+        x:      this.width + 30 + 31,  // centred on pipe
+        y:      gapY + pipeGap / 2,
         radius: 15,
         type,
         color:  colorMap[type]
