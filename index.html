@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Flappy Eagle - Premium Web Game</title>
+  <meta name="description" content="Fly the high-soaring red eagle through energetic tech pillars! Feature-rich Flappy Bird web game with power-ups, parallax backgrounds, and synthesized sound effects.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="bird.png">
+</head>
+<body>
+
+  <div id="app-container">
+    <!-- Main Canvas Layer -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Top HUD Overlay Bar -->
+    <div class="ui-overlay">
+      <div class="hud-bar">
+        <div class="score-display">
+          <div class="current-score" id="score-val">0</div>
+          <div class="high-score-tag">BEST: <span id="highscore-val">0</span></div>
+        </div>
+
+        <div class="hud-actions">
+          <button class="icon-btn" id="stats-toggle" title="Statistics">📊</button>
+          <button class="icon-btn" id="sound-toggle" title="Toggle Sound">🔊</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Power-up Active Status Pills -->
+    <div class="powerup-status-bar">
+      <div class="powerup-pill shield" id="shield-pill" style="display: none;">
+        <span>🛡️</span> SHIELD ACTIVE
+      </div>
+      <div class="powerup-pill slowmo" id="slowmo-pill" style="display: none;">
+        <span>⏳</span> SLOW-MO ACTIVE
+      </div>
+    </div>
+
+    <!-- Tap to Flap Hint Prompt -->
+    <div class="tap-hint" id="tap-hint" style="display: none;">
+      <div class="tap-icon">🦅</div>
+      <div class="tap-text">TAP OR SPACE TO FLAP</div>
+    </div>
+
+    <!-- START MENU MODAL -->
+    <div class="modal-screen active" id="menu-modal">
+      <div class="menu-card">
+        <div class="logo-img-wrapper">
+          <img src="bird.png" alt="Eagle Logo" id="logo-preview">
+        </div>
+
+        <div class="game-title">
+          <h1>FLAPPY EAGLE</h1>
+          <p>Soar high & dodge the obstacles</p>
+        </div>
+
+        <div class="mode-selector">
+          <button class="mode-btn active" data-mode="classic">CLASSIC</button>
+          <button class="mode-btn" data-mode="hardcore">HARDCORE</button>
+          <button class="mode-btn" data-mode="zen">ZEN</button>
+        </div>
+
+        <button class="btn-primary" id="start-btn">
+          <span>START FLIGHT</span> <span>▶</span>
+        </button>
+
+        <div class="controls-footer">
+          Controls: <span class="key-badge">SPACE</span> or <span class="key-badge">TAP SCREEN</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME OVER MODAL -->
+    <div class="modal-screen" id="gameover-modal">
+      <div class="menu-card">
+        <div class="game-title">
+          <h1 style="color: #ff5252;">FLIGHT ENDED</h1>
+          <p>Good run! Here are your flight stats:</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-label">SCORE</span>
+            <span class="stat-value" id="final-score">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">BEST</span>
+            <span class="stat-value gold" id="final-highscore">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">DISTANCE</span>
+            <span class="stat-value" id="final-distance">0m</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">POWERUPS</span>
+            <span class="stat-value" id="final-powerups">0</span>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="restart-btn">
+          <span>TRY AGAIN</span> <span>🔄</span>
+        </button>
+
+        <button class="btn-secondary" id="menu-btn">
+          <span>MAIN MENU</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STATS / ACHIEVEMENTS MODAL -->
+    <div class="modal-screen" id="stats-modal">
+      <div class="menu-card">
+        <div class="game-title">
+          <h1>POWER-UPS GUIDE</h1>
+          <p>Collect items to boost score!</p>
+        </div>
+
+        <div style="text-align: left; width: 100%; font-size: 0.85rem; line-height: 1.6; margin: 10px 0; color: #cbd5e1;">
+          <p style="margin-bottom: 8px;">🌟 <strong>Golden Feather:</strong> Adds +5 bonus points instantly.</p>
+          <p style="margin-bottom: 8px;">🛡️ <strong>Shield Orb:</strong> Absorbs 1 pillar collision.</p>
+          <p>⏳ <strong>Slow-Mo:</strong> Slows down speed & gravity for 6s.</p>
+        </div>
+
+        <button class="btn-secondary" id="stats-close">
+          <span>CLOSE</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ACHIEVEMENT TOAST BANNER -->
+    <div class="achievement-toast" id="achievement-toast">
+      <div class="achievement-icon">🏆</div>
+      <div class="achievement-details">
+        <div class="achievement-title" id="achievement-title">Achievement Unlocked!</div>
+        <div class="achievement-desc" id="achievement-desc">Reached a high score.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Synthesizer Engine -->
+  <script src="js/audio.js"></script>
+  <!-- Game Engine -->
+  <script src="js/game.js"></script>
+  <!-- App Wiring -->
+  <script src="js/app.js"></script>
+</body>
+</html>
