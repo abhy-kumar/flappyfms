@@ -203,8 +203,11 @@ class FlappyGame {
     this.shakeFrames = 0;
     this.feathersCollected = 0;
     this.powerupsCollected = 0;
-    // Set high so the very first pipe spawns the moment PLAYING begins
-    this.distanceSinceLastPipe = 9999;
+    // Give the player ~200px of clear runway before the first pipe appears.
+    // Using (spacing - 200) means after travelling 200px the first pipe spawns.
+    // Do NOT use a value >= spacing or multiple pipes spawn in consecutive frames.
+    const spacing = this.modesConfig[this.mode].pipeSpacingPx;
+    this.distanceSinceLastPipe = spacing - 200;
 
     this.activePowerups.shield = false;
     this.activePowerups.slowmo = false;
