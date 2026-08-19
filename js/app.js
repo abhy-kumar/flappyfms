@@ -667,31 +667,21 @@
     });
     wire('sound-toggle', toggleSound);
     wire('help-toggle', () => { sounds.playClick(); openModal('help'); });
-    wire('leaderboard-toggle', () => {
+    function openLeaderboardModal() {
       sounds.playClick();
       renderLeaderboard(currentLeaderTab);
       openModal('leaderboard');
-    });
+      Leaderboard.fetchRemote().then(() => {
+        if (isOpen('leaderboard')) renderLeaderboard(currentLeaderTab);
+      });
+    }
 
-    wire('help-close', () => { sounds.playClick(); closeModal('help'); });
-    wire('settings-close', () => { sounds.playClick(); closeModal('settings'); });
-    wire('achievements-close', () => { sounds.playClick(); closeModal('achievements'); });
-    wire('leaderboard-close', () => { sounds.playClick(); closeModal('leaderboard'); });
+    wire('leaderboard-toggle', openLeaderboardModal);
+    wire('menu-leaderboard', openLeaderboardModal);
+    wire('gameover-leaderboard', openLeaderboardModal);
 
-    wire('menu-help', () => { sounds.playClick(); openModal('help'); });
-    wire('menu-settings', () => { sounds.playClick(); syncSettingsUI(); openModal('settings'); });
-    wire('menu-achievements', () => { sounds.playClick(); renderAchievements(); openModal('achievements'); });
-    wire('menu-leaderboard', () => {
-      sounds.playClick();
-      renderLeaderboard(currentLeaderTab);
-      openModal('leaderboard');
-    });
-
-    wire('gameover-achievements', () => { sounds.playClick(); renderAchievements(); openModal('achievements'); });
-    wire('gameover-leaderboard', () => {
-      sounds.playClick();
-      renderLeaderboard(currentLeaderTab);
-      openModal('leaderboard');
+    window.addEventListener('ffms_leaderboard_synced', () => {
+      if (isOpen('leaderboard')) renderLeaderboard(currentLeaderTab);
     });
 
     // Close on dimmed backdrop click

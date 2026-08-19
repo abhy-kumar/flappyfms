@@ -1,6 +1,6 @@
 /* ==========================================================================
-   PERSISTENT STORAGE & CAMPUS LEADERBOARD - FLAPPY FMS
-   Safe wrapper around localStorage with in-memory fallback + FMS Leaderboard.
+   PERSISTENT STORAGE & REAL-TIME CAMPUS LEADERBOARD - FLAPPY FMS
+   Firebase Realtime Database Cloud Sync + localStorage Fallback
    ========================================================================== */
 
 const Store = (() => {
@@ -14,7 +14,7 @@ const Store = (() => {
     window.localStorage.removeItem(probe);
     backend = window.localStorage;
   } catch (e) {
-    backend = null; // Safari private / iframe sandbox fallback
+    backend = null;
   }
 
   function rawGet(key) {
@@ -47,7 +47,7 @@ const Store = (() => {
     set(key, value) {
       try {
         rawSet(PREFIX + key, JSON.stringify(value));
-      } catch (e) { /* ignore circular */ }
+      } catch (e) { /* circular ignore */ }
       return value;
     },
 
@@ -119,8 +119,10 @@ try {
 } catch (e) { /* matchMedia unsupported */ }
 
 /* ---------------------------------------------------------------------------
-   FMS CAMPUS LEADERBOARD (TOP 10 HALL OF FAME)
+   FMS REAL-TIME CAMPUS LEADERBOARD (CLOUD SYNC VIA FIREBASE RTDB)
    --------------------------------------------------------------------------- */
+
+const FIREBASE_ENDPOINT = 'https://flappyfms-live-default-rtdb.asia-southeast1.firebasedatabase.app/leaderboard.json';
 
 const DEFAULT_LEADERBOARD = [
   { name: 'FMS_Maverick',    score: 84, mode: 'classic',  medal: 'platinum', date: '2026-08-15' },
@@ -136,8 +138,12 @@ const DEFAULT_LEADERBOARD = [
 ];
 
 const Leaderboard = {
+  _isFetching: false,
+
+  /* Get cached entries filtered by mode */
   getEntries(filterMode = 'all') {
     const list = Store.get('leaderboard', DEFAULT_LEADERBOARD);
+    if (!Array.isArray(list)) return DEFAULT_LEADERBOARD;
     if (filterMode === 'all') {
       return list.slice().sort((a, b) => b.score - a.score).slice(0, 10);
     }
@@ -147,6 +153,7 @@ const Leaderboard = {
       .slice(0, 10);
   },
 
+  /* Check if score qualifies for Top 10 */
   checkTop10(score, mode = 'classic') {
     if (!score || score <= 0) return { qualifies: false, rank: 0 };
     const entries = this.getEntries(mode);
@@ -162,7 +169,54 @@ const Leaderboard = {
     return { qualifies: false, rank: 0 };
   },
 
-  addEntry({ name, score, mode, medal }) {
+  /* Fetch live high scores from Firebase Realtime Database across all PCs */
+  async fetchRemote() {
+    if (this._isFetching) return this.getEntries('all');
+    this._isFetching = true;
+    try {
+      const res = await fetch(FIREBASE_ENDPOINT, { method: 'GET', headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        let remoteData = await res.json();
+        if (remoteData && (Array.isArray(remoteData) || typeof remoteData === 'object')) {
+          // Normalize if object map from Firebase
+          let list = Array.isArray(remoteData) ? remoteData : Object.values(remoteData);
+          list = list.filter(e => e && typeof e.name === 'string' && typeof e.score === 'number');
+
+          if (list.length > 0) {
+            // Merge remote with any unsynced local bests
+            const local = Store.get('leaderboard', DEFAULT_LEADERBOARD);
+            const combinedMap = new Map();
+
+            [...DEFAULT_LEADERBOARD, ...local, ...list].forEach(entry => {
+              const key = `${entry.name}_${entry.mode}_${entry.score}`;
+              if (!combinedMap.has(key)) combinedMap.set(key, entry);
+            });
+
+            const merged = Array.from(combinedMap.values())
+              .sort((a, b) => b.score - a.score)
+              .slice(0, 50);
+
+            Store.set('leaderboard', merged);
+            window.dispatchEvent(new CustomEvent('ffms_leaderboard_synced'));
+          } else {
+            // Empty database — initialize with defaults
+            await this._pushToFirebase(DEFAULT_LEADERBOARD);
+          }
+        } else if (remoteData === null) {
+          // Null database — seed with defaults
+          await this._pushToFirebase(DEFAULT_LEADERBOARD);
+        }
+      }
+    } catch (err) {
+      console.warn('Leaderboard cloud sync fallback to local cache:', err);
+    } finally {
+      this._isFetching = false;
+    }
+    return this.getEntries('all');
+  },
+
+  /* Add a new entry locally and push to Firebase cloud in real-time */
+  async addEntry({ name, score, mode, medal }) {
     if (!score || score <= 0) return null;
     const cleanName = (name || Settings.get('pilotName') || 'FMS_Pilot').trim().slice(0, 18) || 'FMS_Pilot';
     Settings.set('pilotName', cleanName);
@@ -181,11 +235,10 @@ const Leaderboard = {
     list.push(newEntry);
     list.sort((a, b) => b.score - a.score);
 
-    // Keep top 50 in pool across all modes
     const trimmed = list.slice(0, 50);
     Store.set('leaderboard', trimmed);
 
-    // Broadcast update across open tabs / windows
+    // 1. Cross-tab sync on same device
     try {
       if ('BroadcastChannel' in window) {
         const bc = new BroadcastChannel('ffms_leaderboard_sync');
@@ -194,7 +247,27 @@ const Leaderboard = {
       }
     } catch (e) { /* ignore */ }
 
-    const rankInMode = this.getEntries(mode).findIndex(e => e === newEntry || (e.name === cleanName && e.score === score && e.date === now)) + 1;
+    // 2. Real-time Cloud sync to Firebase for all other PCs / Phones
+    this._pushToFirebase(trimmed).catch(() => {});
+
+    const rankInMode = this.getEntries(mode).findIndex(e => e.name === cleanName && e.score === score && e.date === now) + 1;
     return { entry: newEntry, rank: rankInMode > 0 ? rankInMode : 1 };
+  },
+
+  async _pushToFirebase(list) {
+    try {
+      await fetch(FIREBASE_ENDPOINT, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(list)
+      });
+    } catch (e) {
+      console.warn('Firebase push note:', e);
+    }
   }
 };
+
+/* Auto-fetch remote scores on boot */
+if (typeof window !== 'undefined') {
+  setTimeout(() => Leaderboard.fetchRemote(), 800);
+}
