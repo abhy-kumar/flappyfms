@@ -6,12 +6,14 @@
        ================================================================ -->
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- viewport-fit=cover enables safe-area insets on notched phones.
+       user-scalable is NOT disabled — blocking zoom fails WCAG 1.4.4. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
   <!-- Primary SEO — title: 50-60 chars, description: 120-160 chars -->
-  <title>Flappy Eagle – Free Browser Arcade Game</title>
-  <meta name="description" content="Play Flappy Eagle free online – pilot a red eagle through neon obstacles. 3 game modes, power-ups &amp; instant play. No download needed!">
-  <meta name="keywords" content="flappy eagle, free browser game, online arcade game, eagle game, HTML5 game, flappy bird, flappy fms">
+  <title>Flappy FMS – Free Browser Arcade Game</title>
+  <meta name="description" content="Play Flappy FMS free online – fly a red eagle through neon pillars. 3 modes, 6 power-ups, combos &amp; medals. Instant play, no download!">
+  <meta name="keywords" content="flappy fms, flappy eagle, free browser game, online arcade game, eagle game, HTML5 game, flappy bird">
   <meta name="author" content="Abhishek Kumar">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#c0262d">
@@ -25,35 +27,33 @@
 
   <!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
   <meta property="og:type"         content="website">
-  <meta property="og:site_name"    content="Flappy Eagle">
-  <meta property="og:title"        content="Flappy Eagle – Free Browser Arcade Game">
-  <meta property="og:description"  content="Pilot a red eagle through neon obstacles. 3 game modes, power-ups &amp; instant play. 100% free – no download!">
+  <meta property="og:site_name"    content="Flappy FMS">
+  <meta property="og:title"        content="Flappy FMS – Free Browser Arcade Game">
+  <meta property="og:description"  content="Fly a red eagle through neon pillars. 3 modes, 6 power-ups, combo multipliers &amp; medals. 100% free – no download!">
   <meta property="og:url"          content="https://abhy-kumar.github.io/flappyfms/">
   <meta property="og:image"        content="https://abhy-kumar.github.io/flappyfms/bird.png">
-  <meta property="og:image:alt"    content="Flappy Eagle logo – red eagle silhouette in flight">
+  <meta property="og:image:alt"    content="Flappy FMS logo – red eagle silhouette in flight">
   <meta property="og:image:width"  content="512">
   <meta property="og:image:height" content="512">
   <meta property="og:locale"       content="en_US">
 
   <!-- Twitter / X Card -->
   <meta name="twitter:card"        content="summary_large_image">
-  <meta name="twitter:title"       content="Flappy Eagle – Free Browser Arcade Game">
-  <meta name="twitter:description" content="Pilot a red eagle through neon obstacles. 3 game modes, power-ups, arcade action. Free online – no download!">
+  <meta name="twitter:title"       content="Flappy FMS – Free Browser Arcade Game">
+  <meta name="twitter:description" content="Fly a red eagle through neon pillars. 3 modes, 6 power-ups, combos and medals. Free online – no download!">
   <meta name="twitter:image"       content="https://abhy-kumar.github.io/flappyfms/bird.png">
-  <meta name="twitter:image:alt"   content="Flappy Eagle game logo">
+  <meta name="twitter:image:alt"   content="Flappy FMS game logo">
 
   <!-- ================================================================
        STRUCTURED DATA – JSON-LD
        ================================================================ -->
-
-  <!-- VideoGame Schema (enables Google Rich Results) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "VideoGame",
-    "name": "Flappy Eagle",
-    "alternateName": "Flappy FMS",
-    "description": "A free online arcade browser game. Pilot a red eagle through neon obstacles across 3 game modes – Classic, Hardcore, and Zen – with power-ups and synthesized sound effects.",
+    "name": "Flappy FMS",
+    "alternateName": "Flappy Eagle",
+    "description": "A free online arcade browser game. Fly a red eagle through neon pillars across 3 game modes – Classic, Hardcore and Zen – with 6 power-ups, combo multipliers, medals and achievements.",
     "url": "https://abhy-kumar.github.io/flappyfms/",
     "image": "https://abhy-kumar.github.io/flappyfms/bird.png",
     "screenshot": "https://abhy-kumar.github.io/flappyfms/bird.png",
@@ -79,14 +79,13 @@
       "priceCurrency": "USD",
       "availability": "https://schema.org/InStock"
     },
-    "keywords": "flappy eagle, flappy bird, browser game, arcade game, free game, eagle game",
+    "keywords": "flappy fms, flappy eagle, browser game, arcade game, free game, eagle game",
     "inLanguage": "en",
     "datePublished": "2026-08-12",
     "dateModified": "2026-08-19"
   }
   </script>
 
-  <!-- BreadcrumbList Schema -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -95,26 +94,53 @@
       {
         "@type": "ListItem",
         "position": 1,
-        "name": "Flappy Eagle – Home",
+        "name": "Flappy FMS – Home",
         "item": "https://abhy-kumar.github.io/flappyfms/"
       }
     ]
   }
   </script>
 
-  <!-- WebSite Schema with SearchAction -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Flappy Eagle",
+    "name": "Flappy FMS",
+    "alternateName": "Flappy Eagle",
     "url": "https://abhy-kumar.github.io/flappyfms/",
-    "description": "Free online arcade browser game – play Flappy Eagle instantly in your browser.",
+    "description": "Free online arcade browser game – play Flappy FMS instantly in your browser.",
     "inLanguage": "en",
-    "author": {
-      "@type": "Person",
-      "name": "Abhishek Kumar"
-    }
+    "author": { "@type": "Person", "name": "Abhishek Kumar" }
+  }
+  </script>
+
+  <!-- FAQ schema — eligible for Google rich results -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is Flappy FMS free to play?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Flappy FMS is completely free, runs in any modern browser and needs no download, sign-up or installation." }
+      },
+      {
+        "@type": "Question",
+        "name": "How do you play Flappy FMS?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Press Spacebar, the Up arrow or W on desktop, or tap the screen on mobile, to flap. Time your flaps to fly through the gaps between the neon pillars. Every pillar cleared scores points, and consecutive pillars build a combo multiplier up to 5x." }
+      },
+      {
+        "@type": "Question",
+        "name": "What power-ups are in Flappy FMS?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Six: Golden Feather (+5 points), Shield (absorbs one crash), Slow-Mo (slows the world for 6 seconds), Magnet (pulls power-ups toward you for 8 seconds), 2x Points (doubles scoring for 10 seconds) and Ghost (phase through pillars for 5 seconds)." }
+      },
+      {
+        "@type": "Question",
+        "name": "Are high scores saved?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Flappy FMS stores a separate high score for each game mode, plus lifetime stats and achievements, in your browser's local storage. Nothing is uploaded to a server." }
+      }
+    ]
   }
   </script>
 
@@ -127,109 +153,119 @@
   <link rel="preload" href="bird.png"   as="image">
   <link rel="preload" href="styles.css" as="style">
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles.css">
-
-  <!-- ================================================================
-       GOOGLE ANALYTICS 4 — replace G-XXXXXXXXXX with your Measurement ID
-       ================================================================ -->
-  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
-  </script> -->
 </head>
 <body>
 
   <!-- ================================================================
-       SEO CONTENT SECTION — visible to crawlers, hidden from gameplay UI
-       Addresses: thin content, missing H2-H6 header tags, keyword gaps
+       SEO CONTENT SECTION — crawlable, visually offscreen
        ================================================================ -->
-  <article id="seo-content" aria-hidden="true">
+  <article id="seo-content">
     <header>
-      <h1>Flappy Eagle – Free Online Arcade Browser Game</h1>
+      <h1>Flappy FMS – Free Online Arcade Browser Game</h1>
       <p>
-        Flappy Eagle is a free online arcade browser game. Guide a soaring red eagle through
-        neon-lit obstacles across three exciting game modes. No download or sign-up required —
-        play instantly in any modern web browser on desktop or mobile.
+        Flappy FMS (formerly Flappy Eagle) is a free online arcade browser game. Guide a soaring
+        red eagle through neon-lit obstacles across three game modes. No download or sign-up
+        required — play instantly in any modern web browser on desktop or mobile.
       </p>
     </header>
 
     <section>
-      <h2>How to Play Flappy Eagle</h2>
+      <h2>How to Play Flappy FMS</h2>
       <p>
-        Press <strong>Spacebar</strong>, click, or tap the screen to make the eagle flap its wings
-        and gain altitude. Gravity pulls it down — time your taps to navigate through the gaps
-        between neon pillars. Each pillar you clear earns one point. Collect power-ups floating
-        in the gaps for special bonuses. Hit a pillar or the ground and your flight ends.
+        Press <strong>Spacebar</strong>, <strong>Up Arrow</strong>, <strong>W</strong>, click, or tap
+        the screen to make the eagle flap its wings and gain altitude. Gravity pulls it down — time
+        your taps to navigate through the gaps between neon pillars. Each pillar you clear earns
+        points, and clearing pillars back to back builds a combo multiplier worth up to 5× per pillar.
+        Thread a gap tightly for a bonus "close call". Collect power-ups floating in the gaps.
+        Hit a pillar or the ground and your flight ends.
       </p>
       <h3>Game Controls</h3>
-      <p>Spacebar or Up Arrow key on desktop. Click or tap on mobile and tablet devices.</p>
+      <p>
+        Spacebar, Up Arrow or W on desktop. Click or tap on mobile and tablet devices.
+        Press Escape or P to pause; M mutes the sound.
+      </p>
     </section>
 
     <section>
       <h2>Game Modes</h2>
       <h3>Classic Mode</h3>
       <p>
-        The original Flappy Eagle experience. Standard gravity and pipe speed that gradually
-        increases. Perfect for beginners learning the arcade mechanics.
+        The original Flappy FMS experience. Standard gravity, with pillar speed and gap width
+        tightening gradually as your score climbs. Perfect for learning the arcade mechanics.
       </p>
       <h3>Hardcore Mode</h3>
       <p>
-        Fast-paced challenge with moving pillars and tighter gaps. Designed for experienced
-        players seeking a serious arcade challenge.
+        Fast-paced challenge with vertically moving pillars and tighter gaps that shrink faster.
+        Designed for experienced players seeking a serious arcade challenge.
       </p>
       <h3>Zen Mode</h3>
       <p>
-        Relaxed gameplay with wider gaps and gentle gravity. Great for casual play or improving
-        your timing and high score.
+        Relaxed gameplay with wider gaps, gentle gravity and no difficulty ramp at all. Great for
+        casual play or improving your timing and high score.
       </p>
     </section>
 
     <section>
       <h2>Power-Ups &amp; Collectibles</h2>
-      <h3>🌟 Golden Feather</h3>
+      <h3>Golden Feather</h3>
       <p>Collect the Golden Feather power-up to instantly earn +5 bonus points.</p>
-      <h3>🛡️ Shield Orb</h3>
+      <h3>Shield Orb</h3>
       <p>The Shield Orb protects you from a single pillar collision, giving you one extra life.</p>
-      <h3>⏳ Slow-Mo Clock</h3>
+      <h3>Slow-Mo Clock</h3>
       <p>Activating the Slow-Mo Clock reduces game speed and gravity for 6 seconds.</p>
+      <h3>Magnet</h3>
+      <p>The Magnet pulls nearby power-ups toward your eagle for 8 seconds.</p>
+      <h3>2× Points</h3>
+      <p>Doubles every point you score for 10 seconds, stacking with your combo multiplier.</p>
+      <h3>Ghost</h3>
+      <p>Phase straight through pillars without crashing for 5 seconds.</p>
     </section>
 
     <section>
       <h2>Features</h2>
       <ul>
-        <li>Three game modes: Classic, Hardcore, and Zen</li>
-        <li>Three collectible power-ups with unique effects</li>
-        <li>Dynamic sky backgrounds that evolve as your score increases</li>
-        <li>High score tracking saved locally in your browser</li>
-        <li>Synthesized sound effects using the Web Audio API — no downloads</li>
-        <li>Fully responsive — plays on desktop, laptop, tablet, and mobile</li>
-        <li>Achievement milestones at score thresholds</li>
+        <li>Three game modes: Classic, Hardcore and Zen, each with its own high score</li>
+        <li>Six collectible power-ups with unique effects and on-screen timers</li>
+        <li>Combo multipliers up to 5× and bonus points for close calls</li>
+        <li>Bronze, Silver, Gold and Platinum medals awarded per run</li>
+        <li>17 unlockable achievements and lifetime flight statistics</li>
+        <li>Dynamic sky that shifts from night blue to crimson dusk to cyber purple as you score</li>
+        <li>Synthesized sound effects using the Web Audio API — no audio downloads</li>
+        <li>Fully responsive — plays on desktop, laptop, tablet and mobile</li>
+        <li>Pause any time, with automatic pause when you switch tabs</li>
+        <li>Reduced-motion, screen-shake and haptics settings for comfort and accessibility</li>
         <li>Instant play — no account, no download, no installation needed</li>
       </ul>
     </section>
 
     <section>
+      <h2>Frequently Asked Questions</h2>
+      <h3>Is Flappy FMS free?</h3>
+      <p>Yes — completely free, with no ads, sign-up or installation.</p>
+      <h3>Are my high scores saved?</h3>
+      <p>Yes. Each mode keeps its own high score in your browser's local storage, alongside your achievements and lifetime stats. Nothing is sent to a server.</p>
+      <h3>Does it work on mobile?</h3>
+      <p>Yes. The canvas scales to any screen and the controls are tap-based on touch devices.</p>
+    </section>
+
+    <section>
       <h2>About</h2>
       <p>
-        Flappy Eagle (also known as Flappy FMS) is built with pure HTML5, CSS3, and
-        Vanilla JavaScript. The game uses the Canvas API for 60 FPS rendering and the
-        Web Audio API for zero-latency synthesized sound. Created by
-        <a href="https://github.com/abhy-kumar" rel="author">Abhishek Kumar</a>.
+        Flappy FMS (formerly Flappy Eagle) is built with pure HTML5, CSS3 and Vanilla JavaScript.
+        The game uses the Canvas API with a fixed 60 Hz simulation for consistent physics on any
+        display, and the Web Audio API for zero-latency synthesized sound. Created by
+        <a href="https://github.com/abhy-kumar" rel="author" tabindex="-1">Abhishek Kumar</a>.
       </p>
       <h3>Connect &amp; Follow</h3>
-      <p>Follow the project on social media for updates:</p>
       <nav aria-label="Social media links">
         <ul id="social-links">
-          <li><a href="https://github.com/abhy-kumar/flappyfms" rel="noopener" aria-label="Flappy Eagle on GitHub">GitHub</a></li>
-          <li><a href="https://www.linkedin.com/in/abhy-kumar" rel="noopener" aria-label="Abhishek Kumar on LinkedIn">LinkedIn</a></li>
+          <li><a href="https://github.com/abhy-kumar/flappyfms" rel="noopener" tabindex="-1">GitHub</a></li>
+          <li><a href="https://www.linkedin.com/in/abhy-kumar" rel="noopener" tabindex="-1">LinkedIn</a></li>
         </ul>
       </nav>
     </section>
@@ -238,151 +274,249 @@
   <!-- ================================================================
        GAME SHELL
        ================================================================ -->
-  <div id="app-container" role="main" aria-label="Flappy Eagle Game">
+  <div id="app-container" role="main" aria-label="Flappy FMS Game">
 
-    <!-- Canvas -->
-    <canvas id="game-canvas" aria-label="Flappy Eagle game canvas" role="img"></canvas>
+    <canvas id="game-canvas" aria-label="Flappy FMS game canvas" role="img"></canvas>
 
     <!-- ── TOP HUD ────────────────────────────────────────────── -->
-    <div class="ui-overlay" aria-hidden="true">
+    <div class="ui-overlay">
       <div class="hud-bar">
         <div class="score-display">
-          <div class="current-score" id="score-val" aria-live="polite" aria-label="Current score">0</div>
-          <div class="high-score-tag">BEST: <span id="highscore-val">0</span></div>
+          <div class="current-score" id="score-val" aria-live="polite" aria-atomic="true" aria-label="Current score">0</div>
+          <div class="hud-meta">
+            <span class="high-score-tag">BEST <span id="highscore-val">0</span></span>
+            <span class="mode-chip" id="mode-chip">CLASSIC</span>
+            <span class="combo-chip" id="combo-chip" aria-live="polite"><span id="combo-val">×1</span></span>
+          </div>
         </div>
         <div class="hud-actions">
-          <button class="icon-btn" id="stats-toggle" title="How to Play" aria-label="Open how to play guide">📊</button>
-          <button class="icon-btn" id="sound-toggle" title="Toggle Sound" aria-label="Toggle sound">🔊</button>
+          <button class="icon-btn" id="pause-toggle" title="Pause (Esc)" aria-label="Pause game" disabled>⏸</button>
+          <button class="icon-btn" id="sound-toggle" title="Sound (M)" aria-label="Mute sound" aria-pressed="false">🔊</button>
+          <button class="icon-btn" id="help-toggle"  title="How to play" aria-label="Open how to play guide">?</button>
         </div>
       </div>
     </div>
 
-    <!-- ── POWER-UP STATUS PILLS ─────────────────────────────── -->
-    <div class="powerup-status-bar" aria-live="polite">
-      <div class="powerup-pill shield" id="shield-pill" role="status">
-        <span aria-hidden="true">🛡️</span> SHIELD ACTIVE
-      </div>
-      <div class="powerup-pill slowmo" id="slowmo-pill" role="status">
-        <span aria-hidden="true">⏳</span> SLOW-MO ACTIVE
-      </div>
-    </div>
+    <!-- ── POWER-UP PILLS (injected by app.js) ────────────────── -->
+    <div class="powerup-status-bar" id="powerup-status-bar" aria-live="polite"></div>
 
     <!-- ── TAP HINT ────────────────────────────────────────────── -->
     <div class="tap-hint" id="tap-hint" aria-hidden="true">
-      <div class="tap-icon" aria-hidden="true">🦅</div>
+      <div class="tap-icon">🦅</div>
       <div class="tap-text">TAP &nbsp;·&nbsp; CLICK &nbsp;·&nbsp; SPACE</div>
       <div class="tap-sub">to flap</div>
     </div>
 
     <!-- ================================================================
-         START MENU MODAL
+         START MENU
          ================================================================ -->
-    <div class="modal-screen active" id="menu-modal" role="dialog" aria-modal="true" aria-label="Start menu">
+    <div class="modal-screen" id="menu-modal" role="dialog" aria-modal="true" aria-labelledby="menu-heading">
       <div class="menu-card">
 
         <div class="logo-img-wrapper">
-          <img src="bird.png" alt="Flappy Eagle logo – red eagle in flight" id="logo-preview" width="80" height="80">
+          <img src="bird.png" alt="Flappy FMS logo – red eagle in flight" id="logo-preview" width="80" height="80">
         </div>
 
         <div class="game-title">
-          <!-- Single H1 on page — inside the visually prominent start card -->
-          <p class="game-title-heading">FLAPPY EAGLE</p>
+          <p class="game-title-heading" id="menu-heading">FLAPPY FMS</p>
           <p>Soar high &amp; dodge the neon pillars</p>
         </div>
 
         <div class="mode-selector" role="group" aria-label="Select game mode">
-          <button class="mode-btn active" data-mode="classic"  aria-pressed="true">CLASSIC</button>
-          <button class="mode-btn"        data-mode="hardcore" aria-pressed="false">HARDCORE</button>
-          <button class="mode-btn"        data-mode="zen"      aria-pressed="false">ZEN</button>
+          <button class="mode-btn active" data-mode="classic" aria-pressed="true">
+            <span class="mode-name">CLASSIC</span><span class="mode-best">BEST 0</span>
+          </button>
+          <button class="mode-btn" data-mode="hardcore" aria-pressed="false">
+            <span class="mode-name">HARDCORE</span><span class="mode-best">BEST 0</span>
+          </button>
+          <button class="mode-btn" data-mode="zen" aria-pressed="false">
+            <span class="mode-name">ZEN</span><span class="mode-best">BEST 0</span>
+          </button>
         </div>
 
-        <button class="btn-primary" id="start-btn" aria-label="Start Flappy Eagle game">
+        <button class="btn-primary" id="start-btn" data-autofocus aria-label="Start Flappy FMS game">
           <span>START FLIGHT</span> <span aria-hidden="true">▶</span>
         </button>
 
-        <div class="controls-footer" aria-label="Controls">
-          Controls: <span class="key-badge">SPACE</span> <span class="key-badge">↑</span> or <span class="key-badge">TAP / CLICK</span>
+        <div class="btn-row">
+          <button class="btn-ghost" id="menu-help">HOW TO PLAY</button>
+          <button class="btn-ghost" id="menu-achievements">AWARDS</button>
+          <button class="btn-ghost" id="menu-settings">SETTINGS</button>
         </div>
 
-        <p class="seo-blurb">
-          Free arcade browser game &mdash; no download &bull; 3 modes &bull; power-ups
-        </p>
+        <div class="lifetime-strip" aria-label="Lifetime statistics">
+          <div><b id="lt-games">0</b><span>RUNS</span></div>
+          <div><b id="lt-distance">0m</b><span>FLOWN</span></div>
+          <div><b id="lt-combo">0</b><span>BEST COMBO</span></div>
+          <div><b id="lt-achievements">0/17</b><span>AWARDS</span></div>
+        </div>
+
+        <div class="controls-footer">
+          <span class="key-badge">SPACE</span> <span class="key-badge">↑</span> <span class="key-badge">TAP</span> to flap
+          &nbsp;·&nbsp; <span class="key-badge">ESC</span> pause
+        </div>
       </div>
     </div>
 
     <!-- ================================================================
-         GAME OVER MODAL
+         GAME OVER
          ================================================================ -->
-    <div class="modal-screen" id="gameover-modal" role="dialog" aria-modal="true" aria-label="Game over screen">
+    <div class="modal-screen" id="gameover-modal" role="dialog" aria-modal="true" aria-labelledby="gameover-heading">
       <div class="menu-card">
 
+        <div class="newbest-ribbon" id="newbest-ribbon">🏅 NEW PERSONAL BEST</div>
+
         <div class="game-title">
-          <!-- h2 not h1 — page already has one H1 in #seo-content -->
-          <h2 class="gameover-heading">FLIGHT ENDED</h2>
-          <p>Here are your flight stats:</p>
+          <h2 class="gameover-heading" id="gameover-heading">FLIGHT ENDED</h2>
+          <p><span class="mode-chip inline" id="gameover-mode">CLASSIC</span></p>
+        </div>
+
+        <div class="medal-wrap" id="medal-wrap">
+          <div class="medal-icon" id="medal-icon" aria-hidden="true">🥉</div>
+          <div class="medal-text">
+            <strong id="medal-label">BRONZE MEDAL</strong>
+            <em id="medal-next">15 more for SILVER</em>
+          </div>
         </div>
 
         <div class="stats-grid">
-          <div class="stat-box">
-            <span class="stat-label">SCORE</span>
-            <span class="stat-value"     id="final-score">0</span>
-          </div>
-          <div class="stat-box">
-            <span class="stat-label">BEST</span>
-            <span class="stat-value gold" id="final-highscore">0</span>
-          </div>
-          <div class="stat-box">
-            <span class="stat-label">DISTANCE</span>
-            <span class="stat-value"     id="final-distance">0m</span>
-          </div>
-          <div class="stat-box">
-            <span class="stat-label">POWERUPS</span>
-            <span class="stat-value"     id="final-powerups">0</span>
-          </div>
+          <div class="stat-box"><span class="stat-label">SCORE</span><span class="stat-value" id="final-score">0</span></div>
+          <div class="stat-box"><span class="stat-label">BEST</span><span class="stat-value gold" id="final-highscore">0</span></div>
+          <div class="stat-box"><span class="stat-label">DISTANCE</span><span class="stat-value" id="final-distance">0m</span></div>
+          <div class="stat-box"><span class="stat-label">POWER-UPS</span><span class="stat-value" id="final-powerups">0</span></div>
+          <div class="stat-box"><span class="stat-label">TOP COMBO</span><span class="stat-value cyan" id="final-combo">×1</span></div>
+          <div class="stat-box"><span class="stat-label">CLOSE CALLS</span><span class="stat-value red" id="final-nearmiss">0</span></div>
         </div>
 
-        <button class="btn-primary"   id="restart-btn" aria-label="Try again">
+        <button class="btn-primary" id="restart-btn" data-autofocus aria-label="Try again">
           <span>TRY AGAIN</span> <span aria-hidden="true">🔄</span>
         </button>
-        <button class="btn-secondary" id="menu-btn" aria-label="Return to main menu">
-          <span>MAIN MENU</span>
-        </button>
+
+        <div class="btn-row">
+          <button class="btn-ghost" id="share-btn">SHARE SCORE</button>
+          <button class="btn-ghost" id="gameover-achievements">AWARDS</button>
+        </div>
+
+        <button class="btn-secondary" id="menu-btn" aria-label="Return to main menu">MAIN MENU</button>
       </div>
     </div>
 
     <!-- ================================================================
-         HOW TO PLAY MODAL
+         PAUSE
          ================================================================ -->
-    <div class="modal-screen" id="stats-modal" role="dialog" aria-modal="true" aria-label="How to play Flappy Eagle">
-      <div class="menu-card">
+    <div class="modal-screen" id="pause-modal" role="dialog" aria-modal="true" aria-labelledby="pause-heading">
+      <div class="menu-card compact">
         <div class="game-title">
-          <h2>HOW TO PLAY</h2>
-          <p>Collect items in the gap for boosts!</p>
+          <h2 class="pause-heading" id="pause-heading">PAUSED</h2>
+          <p>Take a breath — your run is waiting</p>
+        </div>
+        <button class="btn-primary" id="pause-resume" data-autofocus>
+          <span>RESUME</span> <span aria-hidden="true">▶</span>
+        </button>
+        <button class="btn-secondary" id="pause-restart">RESTART RUN</button>
+        <button class="btn-secondary" id="pause-menu">MAIN MENU</button>
+        <div class="controls-footer"><span class="key-badge">ESC</span> or <span class="key-badge">P</span> to resume</div>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         HOW TO PLAY
+         ================================================================ -->
+    <div class="modal-screen" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-heading">
+      <div class="menu-card scrollable">
+        <div class="game-title">
+          <h2 id="help-heading">HOW TO PLAY</h2>
+          <p>Grab the pickups floating in the gaps</p>
         </div>
 
         <ul class="help-list">
-          <li><span aria-hidden="true">🌟</span> <strong>Golden Feather</strong> – +5 bonus points instantly</li>
-          <li><span aria-hidden="true">🛡️</span> <strong>Shield Orb</strong> – absorbs one pillar collision</li>
-          <li><span aria-hidden="true">⏳</span> <strong>Slow-Mo Clock</strong> – slows everything for 6 seconds</li>
+          <li><span class="help-ico">🌟</span> <span><strong>Golden Feather</strong><em>+5 points instantly</em></span></li>
+          <li><span class="help-ico">🛡️</span> <span><strong>Shield</strong><em>Absorbs one crash</em></span></li>
+          <li><span class="help-ico">⏳</span> <span><strong>Slow-Mo</strong><em>Slows the world for 6s</em></span></li>
+          <li><span class="help-ico">🧲</span> <span><strong>Magnet</strong><em>Pulls pickups to you for 8s</em></span></li>
+          <li><span class="help-ico">💎</span> <span><strong>2× Points</strong><em>Doubles scoring for 10s</em></span></li>
+          <li><span class="help-ico">👻</span> <span><strong>Ghost</strong><em>Phase through pillars for 5s</em></span></li>
         </ul>
 
         <div class="help-divider"></div>
 
-        <ul class="help-list">
-          <li><span class="key-badge">SPACE</span> or <span class="key-badge">↑</span> to flap</li>
-          <li><span class="key-badge">CLICK</span> or <span class="key-badge">TAP</span> to flap on mobile</li>
-          <li>Hit a pillar or the ground to end your flight</li>
+        <h3 class="help-subhead">SCORING</h3>
+        <ul class="help-list plain">
+          <li>Each pillar cleared scores 1 point × your multiplier</li>
+          <li>Every 5 pillars in a row raises the multiplier, up to <strong>×5</strong></li>
+          <li>Thread a gap tightly for a <strong>close call</strong> bonus</li>
+          <li>Crashing into a shield resets your combo but saves your run</li>
         </ul>
 
-        <button class="btn-secondary" id="stats-close" aria-label="Close guide">CLOSE</button>
+        <div class="help-divider"></div>
+
+        <h3 class="help-subhead">CONTROLS</h3>
+        <ul class="help-list plain">
+          <li><span class="key-badge">SPACE</span> <span class="key-badge">↑</span> <span class="key-badge">W</span> or <span class="key-badge">TAP</span> — flap</li>
+          <li><span class="key-badge">ESC</span> <span class="key-badge">P</span> — pause</li>
+          <li><span class="key-badge">M</span> — mute</li>
+        </ul>
+
+        <button class="btn-secondary" id="help-close" data-autofocus>CLOSE</button>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         SETTINGS
+         ================================================================ -->
+    <div class="modal-screen" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-heading">
+      <div class="menu-card scrollable">
+        <div class="game-title">
+          <h2 id="settings-heading">SETTINGS</h2>
+          <p>Saved on this device</p>
+        </div>
+
+        <div class="option-row">
+          <label for="opt-volume">Volume</label>
+          <input type="range" id="opt-volume" min="0" max="100" step="5" value="50">
+        </div>
+
+        <div class="option-row">
+          <label for="opt-haptics">Vibration</label>
+          <input type="checkbox" id="opt-haptics" class="switch">
+        </div>
+
+        <div class="option-row">
+          <label for="opt-shake">Screen shake</label>
+          <input type="checkbox" id="opt-shake" class="switch">
+        </div>
+
+        <div class="option-row">
+          <label for="opt-motion">Reduced motion</label>
+          <input type="checkbox" id="opt-motion" class="switch">
+        </div>
+
+        <div class="help-divider"></div>
+
+        <button class="btn-danger" id="reset-data">RESET ALL PROGRESS</button>
+        <button class="btn-secondary" id="settings-close" data-autofocus>CLOSE</button>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         ACHIEVEMENTS
+         ================================================================ -->
+    <div class="modal-screen" id="achievements-modal" role="dialog" aria-modal="true" aria-labelledby="ach-heading">
+      <div class="menu-card scrollable">
+        <div class="game-title">
+          <h2 id="ach-heading">AWARDS</h2>
+          <p id="achievement-progress">0 / 17 unlocked</p>
+        </div>
+        <ul class="achievement-list" id="achievement-list"></ul>
+        <button class="btn-secondary" id="achievements-close" data-autofocus>CLOSE</button>
       </div>
     </div>
 
     <!-- ================================================================
          ACHIEVEMENT TOAST
          ================================================================ -->
-    <div class="achievement-toast" id="achievement-toast" role="alert" aria-live="assertive">
-      <div class="achievement-icon" aria-hidden="true">🏆</div>
+    <div class="achievement-toast" id="achievement-toast" role="status" aria-live="polite">
+      <div class="achievement-icon" id="achievement-icon" aria-hidden="true">🏆</div>
       <div class="achievement-details">
         <div class="achievement-title" id="achievement-title">Achievement Unlocked!</div>
         <div class="achievement-desc"  id="achievement-desc">Keep flying!</div>
@@ -394,6 +528,7 @@
   <!-- ================================================================
        SCRIPTS (order matters)
        ================================================================ -->
+  <script src="js/store.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/game.js"></script>
   <script src="js/app.js"></script>

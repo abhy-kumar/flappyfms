@@ -1,766 +1,1327 @@
 /* ==========================================================================
-   GAME ENGINE - FLAPPY EAGLE (FLAPPY FMS)
+   GAME ENGINE - FLAPPY FMS
+   --------------------------------------------------------------------------
+   Simulation runs on a FIXED 60 Hz timestep behind a variable-rate render
+   loop. The previous build mixed dt-scaled values with raw per-frame values,
+   so on a 120/144 Hz display particles, clouds, wing animation and — worst of
+   all — the Hardcore moving pipes all ran 2-2.4x too fast. Every constant in
+   here is "per 60 Hz step", exactly matching the old numbers at 60 fps, so
+   the flight feel is unchanged while the behaviour is now identical on any
+   refresh rate.
+
+   The engine owns simulation + rendering only. All DOM input is bound in
+   app.js, which decides whether input is allowed (fixes flaps registering
+   while a modal is open).
    ========================================================================== */
 
-class FlappyGame {
-  constructor(canvas, onScoreUpdate, onGameOver, onAchievement) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
-    this.onScoreUpdate = onScoreUpdate;
-    this.onGameOver = onGameOver;
-    this.onAchievement = onAchievement;
+const STEP_MS  = 1000 / 60;
+const STEP_SEC = 1 / 60;
 
-    // Sprite loading
+/* --------------------------------------------------------------------------
+   MODE CONFIGURATION
+   Base physics values are IDENTICAL to the previous build. What is new is the
+   difficulty ramp: speed creeps up and gaps/spacing tighten as the score
+   climbs, then hard-stop at a floor so the game never becomes impossible.
+   Zen has no ramp at all — it is meant to stay relaxed.
+   -------------------------------------------------------------------------- */
+const MODES = {
+  classic: {
+    label: 'CLASSIC',
+    gravity: 0.42, jump: -8.5, pipeSpeed: 2.4,
+    pipeGapFrac: 0.38, pipeSpacingPx: 320,
+    movingPipes: false,
+    rampScore: 40, rampSpeed: 0.35, gapShrink: 0.05, spacingShrink: 0.10,
+    powerupChance: 0.30,
+    medals: { bronze: 10, silver: 25, gold: 50, platinum: 100 }
+  },
+  hardcore: {
+    label: 'HARDCORE',
+    gravity: 0.50, jump: -9.0, pipeSpeed: 3.2,
+    pipeGapFrac: 0.30, pipeSpacingPx: 270,
+    movingPipes: true,
+    rampScore: 30, rampSpeed: 0.40, gapShrink: 0.035, spacingShrink: 0.12,
+    powerupChance: 0.36,
+    medals: { bronze: 8, silver: 18, gold: 35, platinum: 70 }
+  },
+  zen: {
+    label: 'ZEN',
+    gravity: 0.30, jump: -7.8, pipeSpeed: 1.8,
+    pipeGapFrac: 0.46, pipeSpacingPx: 370,
+    movingPipes: false,
+    rampScore: 0, rampSpeed: 0, gapShrink: 0, spacingShrink: 0,
+    powerupChance: 0.26,
+    medals: { bronze: 15, silver: 40, gold: 75, platinum: 150 }
+  }
+};
+
+/* --------------------------------------------------------------------------
+   POWER-UP DEFINITIONS
+   -------------------------------------------------------------------------- */
+const POWERUPS = {
+  feather: { icon: '🌟', color: '#ffb703', label: 'GOLDEN FEATHER', weight: 30, duration: 0 },
+  shield:  { icon: '🛡️', color: '#00f2fe', label: 'SHIELD',         weight: 20, duration: 0 },
+  slowmo:  { icon: '⏳', color: '#a855f7', label: 'SLOW-MO',        weight: 16, duration: 6 },
+  magnet:  { icon: '🧲', color: '#f43f5e', label: 'MAGNET',         weight: 14, duration: 8 },
+  double:  { icon: '💎', color: '#22d3ee', label: '2× POINTS',      weight: 13, duration: 10 },
+  ghost:   { icon: '👻', color: '#e2e8f0', label: 'GHOST',          weight: 7,  duration: 5 }
+};
+
+const NEAR_MISS_PX = 20;   // clearance under this counts as a close call
+const MAX_MULT     = 5;
+
+/* --------------------------------------------------------------------------
+   SMALL HELPERS
+   -------------------------------------------------------------------------- */
+function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function hexToRgb(hex) {
+  const h = hex.replace('#', '');
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+function mixHex(a, b, t) {
+  const A = hexToRgb(a), B = hexToRgb(b);
+  return `rgb(${Math.round(lerp(A[0], B[0], t))},${Math.round(lerp(A[1], B[1], t))},${Math.round(lerp(A[2], B[2], t))})`;
+}
+
+/* Sky palettes — smoothly interpolated by score instead of snapping between
+   three hard tiers like the old build did. */
+const SKIES = [
+  { at: 0,  top: '#0a0f1e', mid: '#162033', bot: '#0d1321', star: 0.85, hill: '#131c30' },
+  { at: 25, top: '#1a0208', mid: '#4a1520', bot: '#0d1321', star: 0.45, hill: '#2a0d18' },
+  { at: 60, top: '#03030e', mid: '#0d0520', bot: '#050210', star: 1.00, hill: '#0b0620' }
+];
+
+/* ========================================================================== */
+
+class FlappyGame {
+  constructor(canvas, emit) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d', { alpha: false });
+    this.emit = emit || function () {};
+
     this.birdImg = new Image();
     this.birdImgLoaded = false;
     this.loadBirdSprite();
 
-    // Mode configuration
-    this.mode = 'classic'; // classic, hardcore, zen
+    this.mode = Settings.get('mode') || 'classic';
+    if (!MODES[this.mode]) this.mode = 'classic';
 
-    // Physics constants per mode.
-    // pipeGapFrac:   gap height as fraction of canvas height — always fair on any screen
-    // pipeSpacingPx: constant pixel distance between pipe leading edges (screen-width independent)
-    this.modesConfig = {
-      classic:  { gravity: 0.42,  jump: -8.5, pipeSpeed: 2.4,  pipeGapFrac: 0.38, pipeSpacingPx: 320 },
-      hardcore: { gravity: 0.50,  jump: -9.0, pipeSpeed: 3.2,  pipeGapFrac: 0.30, pipeSpacingPx: 270, movingPipes: true },
-      zen:      { gravity: 0.30,  jump: -7.8, pipeSpeed: 1.8,  pipeGapFrac: 0.46, pipeSpacingPx: 370 }
-    };
+    /* MENU | READY | PLAYING | PAUSED | COUNTDOWN | DYING | GAMEOVER */
+    this.state = 'MENU';
 
-    // Game state
-    this.state = 'MENU'; // MENU, READY, PLAYING, GAMEOVER
-    this.score = 0;
-    this.highScore = parseInt(localStorage.getItem('flappy_eagle_highscore') || '0', 10);
-    this.distance = 0;
-    this.feathersCollected = 0;
-    this.powerupsCollected = 0;
-
-    // Dimensions (set by resizeCanvas)
     this.width = 0;
     this.height = 0;
-    this.dpr = window.devicePixelRatio || 1;
+    this.dpr = 1;
 
-    // Bird Properties
     this.bird = {
-      x: 0, y: 0,
-      width: 52, height: 52,
-      vy: 0, rotation: 0, radius: 20,
-      wingPulse: 1.0
+      x: 0, y: 0, width: 52, height: 52,
+      vy: 0, rotation: 0, radius: 20, wingPulse: 1.0
     };
 
-    // Power-up states (slowmoTime in SECONDS)
-    this.activePowerups = {
-      shield: false,
-      slowmo: false,
-      slowmoTime: 0  // seconds remaining
-    };
-
-    // Game Entities
     this.pipes = [];
     this.powerups = [];
     this.particles = [];
+    this.popups = [];
     this.bgStars = [];
     this.clouds = [];
+    this.hills = [];
+
+    this.active = {};              // powerup -> steps remaining (shield = Infinity)
+    this.resetRunState();
+
     this.frameCount = 0;
     this.shakeFrames = 0;
-    // Distance (in px) scrolled since the last pipe was spawned.
-    // Start at pipeSpacingPx so the first pipe spawns immediately on game start.
-    this.distanceSinceLastPipe = 9999;
+    this.flash = 0;
+    this.hitStop = 0;
+    this.countdown = 0;
+    this.dyingTicks = 0;
+    this.accumulator = 0;
+    this.running = true;
+    this.fpsSamples = [];
 
     this.resizeCanvas();
     this.initBackgroundElements();
-    this.bindEvents();
+    window.addEventListener('resize', () => this.resizeCanvas());
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', () => this.resizeCanvas());
+    }
 
-    // Start render/update loop
     this.lastTime = performance.now();
     requestAnimationFrame((t) => this.loop(t));
   }
 
   /* ---------------------------------------------------------------------- */
-  /*  ASSET LOADING                                                           */
+  /*  ASSETS                                                                 */
   /* ---------------------------------------------------------------------- */
 
   loadBirdSprite() {
     this.birdImg.onload = () => { this.birdImgLoaded = true; };
-    this.birdImg.onerror = () => { this.birdImg.src = 'bird.jpeg'; };
+    this.birdImg.onerror = () => {
+      // Only try the fallback once, otherwise a missing jpeg loops forever.
+      if (!this._triedFallback) {
+        this._triedFallback = true;
+        this.birdImg.src = 'bird.jpeg';
+      }
+    };
     this.birdImg.src = 'bird.png';
   }
 
   /* ---------------------------------------------------------------------- */
-  /*  CANVAS SIZING                                                           */
+  /*  SIZING                                                                 */
   /* ---------------------------------------------------------------------- */
+
+  get groundY() {
+    return this.height - Math.min(65, this.height * 0.14);
+  }
 
   resizeCanvas() {
     const container = this.canvas.parentElement;
-    const w = container.clientWidth  || window.innerWidth;
-    const h = container.clientHeight || window.innerHeight;
+    const w = Math.max(1, container.clientWidth || window.innerWidth);
+    const h = Math.max(1, container.clientHeight || window.innerHeight);
 
-    this.width  = w;
+    const prevW = this.width || w;
+    const prevH = this.height || h;
+
+    // devicePixelRatio is re-read every resize — the old build cached it once
+    // in the constructor, so zooming or moving to another monitor rendered blurry.
+    this.dpr = clamp(window.devicePixelRatio || 1, 1, 3);
+
+    this.width = w;
     this.height = h;
-
-    // Physical pixels
-    this.canvas.width  = Math.round(w * this.dpr);
+    this.canvas.width = Math.round(w * this.dpr);
     this.canvas.height = Math.round(h * this.dpr);
-
-    // CSS pixels
-    this.canvas.style.width  = w + 'px';
+    this.canvas.style.width = w + 'px';
     this.canvas.style.height = h + 'px';
-
-    // Reset transform and scale once
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    this.ctx.imageSmoothingQuality = 'high';
 
-    // Reposition bird to centre-left after resize
-    if (this.state === 'MENU' || this.state === 'READY') {
-      this.bird.x = w * 0.22;
-      this.bird.y = h * 0.45;
+    // Rescale the live world so a mid-flight resize (mobile URL bar collapsing,
+    // desktop window drag, orientation change) stays fair instead of leaving
+    // pipes with gaps computed for the old height.
+    const sx = w / prevW;
+    const sy = h / prevH;
+    if (sx !== 1 || sy !== 1) {
+      this.pipes.forEach(p => {
+        p.x *= sx;
+        p.gapY *= sy;
+        p.gapHeight *= sy;
+      });
+      this.powerups.forEach(p => { p.x *= sx; p.y *= sy; });
+      this.bird.y *= sy;
     }
 
-    // Regenerate bg elements if needed
+    this.bird.x = w * 0.22;
+    if (this.state === 'MENU' || this.state === 'READY') this.bird.y = h * 0.45;
+    this.bird.y = clamp(this.bird.y, this.bird.radius, this.groundY - this.bird.radius);
+
     this.initBackgroundElements();
   }
 
-  /* ---------------------------------------------------------------------- */
-  /*  BACKGROUND ELEMENTS                                                     */
-  /* ---------------------------------------------------------------------- */
-
   initBackgroundElements() {
+    const starCount = Settings.get('reducedMotion') ? 30 : 55;
     this.bgStars = [];
-    for (let i = 0; i < 55; i++) {
+    for (let i = 0; i < starCount; i++) {
       this.bgStars.push({
-        x:     Math.random() * this.width,
-        y:     Math.random() * this.height * 0.75,
-        size:  Math.random() * 2.5 + 0.5,
-        alpha: Math.random() * 0.7 + 0.3
+        x: Math.random() * this.width,
+        y: Math.random() * this.height * 0.75,
+        size: Math.random() * 2.5 + 0.5,
+        alpha: Math.random() * 0.7 + 0.3,
+        depth: Math.random() * 0.25 + 0.05
       });
     }
     this.clouds = [];
     for (let i = 0; i < 6; i++) {
       this.clouds.push({
-        x:     Math.random() * this.width,
-        y:     Math.random() * (this.height * 0.45) + 40,
+        x: Math.random() * this.width,
+        y: Math.random() * (this.height * 0.45) + 40,
         speed: Math.random() * 0.5 + 0.25,
         scale: Math.random() * 0.6 + 0.55
       });
     }
-  }
-
-  /* ---------------------------------------------------------------------- */
-  /*  INPUT BINDING                                                           */
-  /* ---------------------------------------------------------------------- */
-
-  bindEvents() {
-    window.addEventListener('resize', () => this.resizeCanvas());
-
-    // Keyboard: Space or ArrowUp
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' || e.code === 'ArrowUp') {
-        e.preventDefault();
-        this._handleFlap();
-      }
-    });
-
-    // Mouse click on the canvas area
-    this.canvas.addEventListener('click', (e) => {
-      this._handleFlap();
-    });
-
-    // Touch / pointer on canvas
-    this.canvas.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      this._handleFlap();
-    });
-  }
-
-  _handleFlap() {
-    if (this.state === 'READY') {
-      this.startPlay();
-      this.flap();
-    } else if (this.state === 'PLAYING') {
-      this.flap();
+    // Parallax ridge line behind the pipes.
+    this.hills = [];
+    const segments = Math.ceil(this.width / 90) + 3;
+    for (let i = 0; i < segments; i++) {
+      this.hills.push({ x: i * 90, h: Math.random() * this.height * 0.16 + this.height * 0.06 });
     }
   }
 
   /* ---------------------------------------------------------------------- */
-  /*  PUBLIC API                                                              */
+  /*  DIFFICULTY                                                             */
   /* ---------------------------------------------------------------------- */
 
+  get cfg() { return MODES[this.mode]; }
+
+  /* 0 -> 1 progression through the mode's ramp window. */
+  get ramp() {
+    const c = this.cfg;
+    return c.rampScore ? clamp(this.score / c.rampScore, 0, 1) : 0;
+  }
+
+  get pipeSpeed() {
+    const c = this.cfg;
+    return c.pipeSpeed * (1 + c.rampSpeed * this.ramp);
+  }
+
+  get pipeSpacing() {
+    const c = this.cfg;
+    return c.pipeSpacingPx * (1 - c.spacingShrink * this.ramp);
+  }
+
+  get pipeGapPx() {
+    const c = this.cfg;
+    const frac = c.pipeGapFrac - c.gapShrink * this.ramp;
+    // Clamped so the gap stays a real challenge on tall desktop screens and
+    // stays survivable on short landscape phones.
+    return clamp(Math.round(this.height * frac), 145, 300);
+  }
+
+  get speedMult() { return this.active.slowmo ? 0.55 : 1.0; }
+
+  /* ---------------------------------------------------------------------- */
+  /*  RUN LIFECYCLE                                                          */
+  /* ---------------------------------------------------------------------- */
+
+  resetRunState() {
+    this.score = 0;
+    this.distance = 0;
+    this.combo = 0;
+    this.maxCombo = 0;
+    this.nearMisses = 0;
+    this.powerupsCollected = 0;
+    this.shieldSaves = 0;
+    this.ghostPasses = 0;
+    this.pipesPassed = 0;
+    this.runTicks = 0;
+    this.beatBest = false;
+    this.startingBest = this.best;   // snapshot so "new record" is judged against the run start
+    this.active = { shield: false, slowmo: 0, magnet: 0, double: 0, ghost: 0 };
+  }
+
+  get bests() { return Store.get('bests', {}); }
+
+  get best() { return this.bests[this.mode] || 0; }
+
+  saveBest() {
+    const bests = this.bests;
+    if (this.score > (bests[this.mode] || 0)) {
+      bests[this.mode] = this.score;
+      Store.set('bests', bests);
+      if (!this.beatBest && this.score > 0) {
+        this.beatBest = true;
+        // Only celebrate an actual overtake. On a mode's very first run there
+        // is no previous record to beat, so the toast would be meaningless.
+        if (this.startingBest > 0) this.emit('record', { score: this.score, mode: this.mode });
+      }
+    }
+  }
+
   setMode(mode) {
-    if (this.modesConfig[mode]) this.mode = mode;
+    if (!MODES[mode]) return;
+    this.mode = mode;
+    Settings.set('mode', mode);
+    this.emit('mode', { mode, label: MODES[mode].label, best: this.best });
   }
 
   resetGame() {
-    this.bird.x  = this.width  * 0.22;
-    this.bird.y  = this.height * 0.45;
-    this.bird.vy = 0;
-    this.bird.rotation = 0;
-
     this.pipes = [];
     this.powerups = [];
     this.particles = [];
-    this.score = 0;
-    this.distance = 0;
+    this.popups = [];
+    this.resetRunState();
+
+    this.bird.x = this.width * 0.22;
+    this.bird.y = this.height * 0.45;
+    this.bird.vy = 0;
+    this.bird.rotation = 0;
+    this.bird.wingPulse = 1;
+
     this.frameCount = 0;
     this.shakeFrames = 0;
-    this.feathersCollected = 0;
-    this.powerupsCollected = 0;
-    // Give the player ~200px of clear runway before the first pipe appears.
-    // Using (spacing - 200) means after travelling 200px the first pipe spawns.
-    // Do NOT use a value >= spacing or multiple pipes spawn in consecutive frames.
-    const spacing = this.modesConfig[this.mode].pipeSpacingPx;
-    this.distanceSinceLastPipe = spacing - 200;
+    this.flash = 0;
+    this.hitStop = 0;
+    this.countdown = 0;
+    this.dyingTicks = 0;
+    // ~200px of clear runway before the first pipe appears.
+    this.distanceSinceLastPipe = Math.max(0, this.pipeSpacing - 200);
 
-    this.activePowerups.shield = false;
-    this.activePowerups.slowmo = false;
-    this.activePowerups.slowmoTime = 0;
+    this.setState('READY');
+    this.pushScore();
+    this.emit('powerups', this.powerupSnapshot());
+  }
 
-    this.state = 'READY';
-    this.onScoreUpdate(this.score, this.highScore);
+  setState(next) {
+    if (this.state === next) return;
+    this.state = next;
+    this.emit('state', { state: next });
   }
 
   startPlay() {
-    this.state = 'PLAYING';
+    if (this.state === 'READY') this.setState('PLAYING');
+  }
+
+  pause() {
+    if (this.state !== 'PLAYING' && this.state !== 'COUNTDOWN') return false;
+    this.pausedFrom = 'PLAYING';
+    this.setState('PAUSED');
+    sounds.playPause();
+    return true;
+  }
+
+  resume() {
+    if (this.state !== 'PAUSED') return false;
+    sounds.playResume();
+    this.countdown = 3 * 45;      // 3 second countdown at 60Hz
+    this.setState('COUNTDOWN');
+    return true;
+  }
+
+  togglePause() {
+    if (this.state === 'PAUSED') return this.resume();
+    return this.pause();
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /*  INPUT (called by app.js)                                               */
+  /* ---------------------------------------------------------------------- */
+
+  handleFlap() {
+    if (this.state === 'READY') {
+      this.startPlay();
+      this.flap();
+      return true;
+    }
+    if (this.state === 'PLAYING') {
+      this.flap();
+      return true;
+    }
+    return false;
   }
 
   flap() {
-    if (this.state !== 'PLAYING' && this.state !== 'READY') return;
-    const cfg = this.modesConfig[this.mode];
-    this.bird.vy = cfg.jump;
+    this.bird.vy = this.cfg.jump;
     this.bird.wingPulse = 1.35;
-
     sounds.playFlap();
+    this.haptic(8);
 
-    // Feather particle trail
-    for (let i = 0; i < 7; i++) {
-      this.particles.push({
-        x: this.bird.x - 8,
-        y: this.bird.y + (Math.random() * 12 - 6),
-        vx: -Math.random() * 2.5 - 0.5,
-        vy: Math.random() * 2 - 1,
-        size: Math.random() * 4 + 2,
-        color: `rgba(255,${Math.floor(Math.random()*80+100)},100,0.85)`,
-        life: 1.0,
-        decay: 0.045
-      });
+    if (!Settings.get('reducedMotion')) {
+      for (let i = 0; i < 7; i++) {
+        this.particles.push({
+          x: this.bird.x - 8,
+          y: this.bird.y + (Math.random() * 12 - 6),
+          vx: -Math.random() * 2.5 - 0.5,
+          vy: Math.random() * 2 - 1,
+          size: Math.random() * 4 + 2,
+          color: `rgba(255,${Math.floor(Math.random() * 80 + 100)},100,0.85)`,
+          life: 1.0, decay: 0.045, gravity: 0.1
+        });
+      }
     }
   }
 
+  haptic(ms) {
+    if (!Settings.get('haptics')) return;
+    try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* unsupported */ }
+  }
+
   /* ---------------------------------------------------------------------- */
-  /*  UPDATE LOOP (called every frame)                                        */
+  /*  SIMULATION — one fixed 60 Hz step                                      */
   /* ---------------------------------------------------------------------- */
 
-  update(dt) {
-    // dt is in milliseconds; clamp to prevent large jumps on tab switch
-    const dtSec = Math.min(dt, 50) / 1000;
-    const cfg = this.modesConfig[this.mode];
-    const speedMult = this.activePowerups.slowmo ? 0.55 : 1.0;
+  step() {
+    this.frameCount++;
 
-    // --- Screen shake ---
     if (this.shakeFrames > 0) this.shakeFrames--;
+    if (this.flash > 0) this.flash = Math.max(0, this.flash - 0.06);
 
-    // --- Background clouds ---
+    // Ambient motion continues on menus so the scene never looks frozen.
+    const bgMult = (this.state === 'PAUSED') ? 0 : this.speedMult;
     this.clouds.forEach(c => {
-      c.x -= c.speed * speedMult;
-      if (c.x < -120) c.x = this.width + 60;
+      c.x -= c.speed * bgMult;
+      if (c.x < -120) { c.x = this.width + 60; c.y = Math.random() * (this.height * 0.45) + 40; }
     });
 
-    // --- READY state: bird bobs in place ---
-    if (this.state === 'READY') {
-      this.bird.y = this.height * 0.45 + Math.sin(this.frameCount * 0.07) * 9;
-      this.bird.rotation = 0;
-      this.frameCount++;
-      this.updateParticles();
+    if (this.state === 'PAUSED') return;
+
+    // Particles and popups keep animating in every state — the old build
+    // returned early on GAMEOVER, freezing the death explosion mid-air.
+    this.updateParticles();
+    this.updatePopups();
+
+    if (this.state === 'COUNTDOWN') {
+      this.countdown--;
+      if (this.countdown <= 0) this.setState('PLAYING');
       return;
     }
 
+    // The bird idles on the menu too, so the backdrop behind the start card
+    // is alive rather than a frozen frame.
+    if (this.state === 'READY' || this.state === 'MENU') {
+      this.bird.y = this.height * 0.45 + Math.sin(this.frameCount * 0.07) * 9;
+      this.bird.rotation = 0;
+      return;
+    }
+
+    if (this.state === 'DYING') { this.stepDying(); return; }
     if (this.state !== 'PLAYING') return;
 
-    this.frameCount++;
-    this.distance += cfg.pipeSpeed * speedMult * dtSec * 60 * 0.12;
+    if (this.hitStop > 0) { this.hitStop--; return; }
 
-    // --- Slow-mo countdown (in seconds) ---
-    if (this.activePowerups.slowmo) {
-      this.activePowerups.slowmoTime -= dtSec;
-      if (this.activePowerups.slowmoTime <= 0) {
-        this.activePowerups.slowmo = false;
+    this.runTicks++;
+    this.stepPlaying();
+  }
+
+  stepPlaying() {
+    const cfg = this.cfg;
+    const mult = this.speedMult;
+    const speed = this.pipeSpeed * mult;
+    const groundY = this.groundY;
+
+    this.distance += speed * 0.12;
+
+    // --- timed power-ups (stored in steps, decremented once per step) ---
+    ['slowmo', 'magnet', 'double', 'ghost'].forEach(key => {
+      if (this.active[key] > 0) {
+        this.active[key]--;
+        if (this.active[key] === 0) this.emit('powerups', this.powerupSnapshot());
       }
-    }
+    });
 
-    // --- Bird physics (pixel/frame at 60fps, scaled by dtSec) ---
-    const gravityScale = this.activePowerups.slowmo ? 0.75 : 1.0;
-    this.bird.vy += cfg.gravity * gravityScale * (dtSec * 60);
-    this.bird.vy  = Math.min(this.bird.vy, 14);   // terminal velocity
-    this.bird.y  += this.bird.vy * (dtSec * 60);
+    // --- bird physics (identical constants to the 60fps original) ---
+    const gravityScale = this.active.slowmo ? 0.75 : 1.0;
+    this.bird.vy = Math.min(this.bird.vy + cfg.gravity * gravityScale, 14);
+    this.bird.y += this.bird.vy;
 
-    // Wing pulse decay
     if (this.bird.wingPulse > 1.0) this.bird.wingPulse = Math.max(1.0, this.bird.wingPulse - 0.05);
 
-    // Rotation
-    if (this.bird.vy < 0) {
-      this.bird.rotation = Math.max(-0.45, this.bird.vy * 0.055);
-    } else {
-      this.bird.rotation = Math.min(1.3, this.bird.rotation + 0.05 * (dtSec * 60));
-    }
+    if (this.bird.vy < 0) this.bird.rotation = Math.max(-0.45, this.bird.vy * 0.055);
+    else this.bird.rotation = Math.min(1.3, this.bird.rotation + 0.05);
 
-    // --- Distance-based pipe spawning ---
-    // Accumulate pixels scrolled this frame; spawn when threshold is reached.
-    // This guarantees consistent spacing in screen pixels on ANY screen width.
-    const pixelsThisFrame = cfg.pipeSpeed * speedMult * (dtSec * 60);
-    this.distanceSinceLastPipe += pixelsThisFrame;
-    if (this.distanceSinceLastPipe >= cfg.pipeSpacingPx) {
-      this.distanceSinceLastPipe -= cfg.pipeSpacingPx;
+    // --- spawn pipes by distance travelled, not by frame count ---
+    this.distanceSinceLastPipe += speed;
+    const spacing = this.pipeSpacing;
+    if (this.distanceSinceLastPipe >= spacing) {
+      this.distanceSinceLastPipe -= spacing;
       this.spawnPipe();
     }
 
-    // --- Update & collide pipes ---
-    const groundY = this.height - 65;
-
+    // --- pipes ---
     for (let i = this.pipes.length - 1; i >= 0; i--) {
       const pipe = this.pipes[i];
-      pipe.x -= cfg.pipeSpeed * speedMult * (dtSec * 60);
+      pipe.x -= speed;
 
-      // Moving pipes (hardcore) — clamp uses the pipe's own gapHeight, scaled to screen
       if (pipe.moving) {
         pipe.gapY += Math.sin(this.frameCount * 0.045 + pipe.offset) * 1.2;
-        const marginTop    = Math.round(this.height * 0.12);
-        const marginBottom = Math.round(this.height * 0.10);
-        const minGap = marginTop;
-        const maxGap = groundY - pipe.gapHeight - marginBottom;
-        pipe.gapY = Math.max(minGap, Math.min(Math.max(minGap + 10, maxGap), pipe.gapY));
+        const minGap = Math.round(this.height * 0.12);
+        const maxGap = groundY - pipe.gapHeight - Math.round(this.height * 0.10);
+        pipe.gapY = clamp(pipe.gapY, minGap, Math.max(minGap + 10, maxGap));
       }
 
-      // Score: passed the pipe
+      // Track the tightest clearance while the bird overlaps this pipe so a
+      // near miss can be scored at the moment it is cleared.
+      const br = this.hitRadius;
+      if (this.bird.x + br > pipe.x && this.bird.x - br < pipe.x + pipe.width) {
+        const clearTop = (this.bird.y - br) - pipe.gapY;
+        const clearBot = (pipe.gapY + pipe.gapHeight) - (this.bird.y + br);
+        pipe.minClear = Math.min(pipe.minClear, Math.max(0, Math.min(clearTop, clearBot)));
+      }
+
       if (!pipe.passed && pipe.x + pipe.width < this.bird.x) {
         pipe.passed = true;
-        this.score++;
-        sounds.playScore();
-        if (this.score > this.highScore) {
-          this.highScore = this.score;
-          localStorage.setItem('flappy_eagle_highscore', this.highScore.toString());
-        }
-        this.onScoreUpdate(this.score, this.highScore);
-        this.checkAchievements();
+        this.onPipeCleared(pipe);
       }
 
-      // Collision
       if (this.checkPipeCollision(pipe)) {
-        if (this.activePowerups.shield) {
-          this.activePowerups.shield = false;
+        if (this.active.ghost > 0) {
+          if (!pipe.ghosted) { pipe.ghosted = true; this.ghostPasses++; }
+        } else if (this.active.shield) {
+          this.active.shield = false;
+          this.shieldSaves++;
+          this.combo = 0;
+          pipe.passed = true;
           this.pipes.splice(i, 1);
-          sounds.playHit();
-          this.shakeFrames = 12;
-          this.createExplosion(this.bird.x, this.bird.y, '#00f2fe');
-          this.onScoreUpdate(this.score, this.highScore); // refresh UI
+          sounds.playShieldBreak();
+          this.haptic([15, 40, 15]);
+          this.shake(14);
+          this.flash = 0.5;
+          this.hitStop = 5;
+          this.createExplosion(this.bird.x, this.bird.y, POWERUPS.shield.color, 26);
+          this.addPopup(this.bird.x, this.bird.y - 40, 'SHIELD SAVE!', POWERUPS.shield.color);
+          this.unlock('shielded');
+          this.emit('powerups', this.powerupSnapshot());
+          this.pushScore();
           continue;
         } else {
-          this.triggerGameOver();
+          this.triggerDeath();
           return;
         }
       }
 
-      // Remove off-screen pipes
-      if (pipe.x + pipe.width < -10) this.pipes.splice(i, 1);
+      if (pipe.x + pipe.width < -10) {
+        pipe.alive = false;
+        this.pipes.splice(i, 1);
+      }
     }
 
-    // --- Update power-up items ---
+    // --- power-up pickups ---
+    const magnetRange = this.active.magnet > 0 ? 190 : 0;
     for (let i = this.powerups.length - 1; i >= 0; i--) {
       const p = this.powerups[i];
-      p.x -= cfg.pipeSpeed * speedMult * (dtSec * 60);
 
-      const dx = p.x - this.bird.x;
-      const dy = p.y - this.bird.y;
-      if (Math.sqrt(dx * dx + dy * dy) < this.bird.radius + p.radius) {
-        this.applyPowerup(p.type);
-        this.createExplosion(p.x, p.y, p.color);
+      if (p.pipe && p.pipe.alive && !p.magnetized) {
+        // Ride with the pipe. The old build spawned pickups at a fixed world
+        // position, so in Hardcore the moving pillar drifted over the pickup
+        // and made it impossible (or lethal) to collect.
+        p.x = p.pipe.x + p.pipe.width / 2;
+        p.y = p.pipe.gapY + p.pipe.gapHeight / 2;
+      } else {
+        p.x -= speed;
+      }
+
+      const dx = this.bird.x - p.x;
+      const dy = this.bird.y - p.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (magnetRange && dist < magnetRange) {
+        p.magnetized = true;
+        p.pipe = null;
+        const pull = 4.2 * (1 - dist / magnetRange) + 1.2;
+        p.x += (dx / (dist || 1)) * pull;
+        p.y += (dy / (dist || 1)) * pull;
+      }
+
+      if (dist < this.bird.radius + p.radius) {
+        this.applyPowerup(p.type, p.x, p.y);
         this.powerups.splice(i, 1);
-        sounds.playPowerup();
         continue;
       }
-      if (p.x + p.radius < 0) this.powerups.splice(i, 1);
+      if (p.x + p.radius < -20) this.powerups.splice(i, 1);
     }
 
-    // --- Ground & ceiling collision ---
-    if (this.bird.y + this.bird.radius >= groundY) {
-      this.bird.y = groundY - this.bird.radius;
-      this.triggerGameOver();
+    // --- world bounds ---
+    if (this.bird.y + this.hitRadius >= groundY) {
+      this.bird.y = groundY - this.hitRadius;
+      this.triggerDeath(true);
       return;
     }
-    if (this.bird.y - this.bird.radius <= 0) {
-      this.bird.y = this.bird.radius;
+    if (this.bird.y - this.hitRadius <= 0) {
+      this.bird.y = this.hitRadius;
       this.bird.vy = 0;
     }
 
-    this.updateParticles();
+    if (this.runTicks === 1) this.emit('powerups', this.powerupSnapshot());
+  }
+
+  stepDying() {
+    const groundY = this.groundY;
+    this.dyingTicks++;
+    this.bird.vy = Math.min(this.bird.vy + 0.55, 16);
+    this.bird.y += this.bird.vy;
+    this.bird.rotation += 0.14;
+
+    if (this.bird.y + this.hitRadius >= groundY) {
+      this.bird.y = groundY - this.hitRadius;
+      this.bird.vy = 0;
+      if (!this._landed) {
+        this._landed = true;
+        this.shake(10);
+        this.createExplosion(this.bird.x, this.bird.y, '#c0262d', 14);
+      }
+    }
+
+    if (this.dyingTicks > 55) this.finishGameOver();
   }
 
   updateParticles() {
     for (let i = this.particles.length - 1; i >= 0; i--) {
-      const pt = this.particles[i];
-      pt.x   += pt.vx;
-      pt.y   += pt.vy;
-      pt.vy  += 0.1; // slight gravity on particles
-      pt.life -= pt.decay;
-      if (pt.life <= 0) this.particles.splice(i, 1);
+      const p = this.particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += (p.gravity || 0.1);
+      p.life -= p.decay;
+      if (p.life <= 0) this.particles.splice(i, 1);
+    }
+    // Hard cap so a long run cannot accumulate thousands of particles.
+    if (this.particles.length > 320) this.particles.splice(0, this.particles.length - 320);
+  }
+
+  updatePopups() {
+    for (let i = this.popups.length - 1; i >= 0; i--) {
+      const p = this.popups[i];
+      p.y -= 1.1;
+      p.life -= 0.018;
+      if (p.life <= 0) this.popups.splice(i, 1);
     }
   }
 
   /* ---------------------------------------------------------------------- */
-  /*  PIPE SPAWNING                                                           */
+  /*  SCORING                                                                */
+  /* ---------------------------------------------------------------------- */
+
+  get multiplier() { return Math.min(MAX_MULT, 1 + Math.floor(this.combo / 5)); }
+
+  get hitRadius() { return this.bird.radius * 0.82; }
+
+  onPipeCleared(pipe) {
+    this.pipesPassed++;
+    this.combo++;
+    this.maxCombo = Math.max(this.maxCombo, this.combo);
+
+    const mult = this.multiplier;
+    const doubled = this.active.double > 0 ? 2 : 1;
+    let gained = mult * doubled;
+
+    const nearMiss = pipe.minClear < NEAR_MISS_PX;
+    if (nearMiss) {
+      this.nearMisses++;
+      const bonus = 2 * mult;
+      gained += bonus;
+      sounds.playNearMiss();
+      this.addPopup(this.bird.x + 60, this.bird.y - 34, `CLOSE! +${bonus}`, '#f43f5e');
+      this.haptic(12);
+      if (this.nearMisses === 5) this.unlock('daredevil');
+    }
+
+    this.score += gained;
+    this.addPopup(pipe.x + pipe.width, pipe.gapY + pipe.gapHeight / 2,
+      `+${gained}${mult > 1 ? ` ×${mult}` : ''}`, mult > 1 ? '#ffb703' : '#ffffff');
+
+    sounds.playScore(this.combo);
+    this.saveBest();
+    this.pushScore();
+    this.checkRunAchievements();
+
+    if (this.combo === 10) this.addPopup(this.bird.x, this.bird.y - 60, 'COMBO ×2!', '#ffb703');
+    if (this.combo === 20) this.addPopup(this.bird.x, this.bird.y - 60, 'ON FIRE!', '#f43f5e');
+  }
+
+  pushScore() {
+    this.emit('score', {
+      score: this.score,
+      best: Math.max(this.best, this.score),
+      combo: this.combo,
+      multiplier: this.multiplier,
+      mode: this.mode
+    });
+  }
+
+  addPopup(x, y, text, color) {
+    if (Settings.get('reducedMotion')) return;
+    // Stack popups that land on top of each other (e.g. a pickup grabbed in the
+    // same instant a pillar is cleared) so the text stays readable.
+    let ty = y;
+    for (let pass = 0; pass < 4; pass++) {
+      const clash = this.popups.some(q => Math.abs(q.x - x) < 100 && Math.abs(q.y - ty) < 24);
+      if (!clash) break;
+      ty -= 26;
+    }
+    this.popups.push({ x, y: ty, text, color, life: 1 });
+    if (this.popups.length > 14) this.popups.shift();
+  }
+
+  shake(frames) {
+    if (Settings.get('shake') && !Settings.get('reducedMotion')) this.shakeFrames = frames;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /*  SPAWNING                                                               */
   /* ---------------------------------------------------------------------- */
 
   spawnPipe() {
-    const cfg     = this.modesConfig[this.mode];
-    const groundY = this.height - 65;
+    const cfg = this.cfg;
+    const groundY = this.groundY;
+    const pipeGap = this.pipeGapPx;
 
-    // Gap is proportional to canvas height — always fair regardless of screen size
-    const pipeGap = Math.round(this.height * cfg.pipeGapFrac);
-
-    // Reserve headroom at top and bottom so pipes never block the entire column
-    const marginTop    = Math.round(this.height * 0.12);  // 12% from top
-    const marginBottom = Math.round(this.height * 0.10);  // 10% from ground stripe
-
+    const marginTop = Math.round(this.height * 0.12);
+    const marginBottom = Math.round(this.height * 0.10);
     const minGapY = marginTop;
-    const maxGapY = groundY - pipeGap - marginBottom;
+    const maxGapY = Math.max(minGapY + 10, groundY - pipeGap - marginBottom);
 
-    // Safety clamp — should never trigger but prevents NaN on extreme screens
-    const safeMaxGapY = Math.max(minGapY + 10, maxGapY);
-    const gapY = Math.random() * (safeMaxGapY - minGapY) + minGapY;
+    let gapY = Math.random() * (maxGapY - minGapY) + minGapY;
 
-    this.pipes.push({
-      x:         this.width + 30,
-      width:     62,
+    // Avoid two consecutive pipes demanding an impossible vertical jump.
+    const prev = this.pipes[this.pipes.length - 1];
+    if (prev) {
+      const maxDelta = pipeGap * 1.15;
+      gapY = clamp(gapY, prev.gapY - maxDelta, prev.gapY + maxDelta);
+      gapY = clamp(gapY, minGapY, maxGapY);
+    }
+
+    const pipe = {
+      x: this.width + 30,
+      width: 62,
       gapY,
       gapHeight: pipeGap,
-      passed:    false,
-      moving:    cfg.movingPipes || false,
-      offset:    Math.random() * Math.PI * 2
-    });
+      passed: false,
+      alive: true,
+      ghosted: false,
+      minClear: Infinity,
+      moving: cfg.movingPipes,
+      offset: Math.random() * Math.PI * 2
+    };
+    this.pipes.push(pipe);
 
-    // 30% chance to place a power-up in the gap centre
-    if (Math.random() < 0.30) {
-      const types    = ['feather', 'shield', 'slowmo'];
-      const type     = types[Math.floor(Math.random() * types.length)];
-      const colorMap = { feather: '#ffb703', shield: '#00f2fe', slowmo: '#a855f7' };
+    if (Math.random() < cfg.powerupChance) {
+      const type = this.rollPowerupType();
       this.powerups.push({
-        x:      this.width + 30 + 31,  // centred on pipe
-        y:      gapY + pipeGap / 2,
-        radius: 15,
+        x: pipe.x + pipe.width / 2,
+        y: gapY + pipeGap / 2,
+        radius: 16,
         type,
-        color:  colorMap[type]
+        color: POWERUPS[type].color,
+        pipe,
+        magnetized: false
       });
     }
   }
 
+  rollPowerupType() {
+    const entries = Object.entries(POWERUPS).filter(([key]) => {
+      if (key === 'shield' && this.active.shield) return false;  // never waste a shield
+      return true;
+    });
+    const total = entries.reduce((sum, [, v]) => sum + v.weight, 0);
+    let roll = Math.random() * total;
+    for (const [key, v] of entries) {
+      roll -= v.weight;
+      if (roll <= 0) return key;
+    }
+    return 'feather';
+  }
+
   /* ---------------------------------------------------------------------- */
-  /*  COLLISION DETECTION                                                     */
+  /*  COLLISION                                                              */
   /* ---------------------------------------------------------------------- */
 
   checkPipeCollision(pipe) {
     const bx = this.bird.x;
     const by = this.bird.y;
-    const br = this.bird.radius * 0.82; // slight forgiveness margin
+    const br = this.hitRadius;
 
-    // Quick horizontal rejection
     if (bx + br <= pipe.x || bx - br >= pipe.x + pipe.width) return false;
-
-    // Hit top pipe?
     if (by - br < pipe.gapY) return true;
-    // Hit bottom pipe?
     if (by + br > pipe.gapY + pipe.gapHeight) return true;
-
     return false;
   }
 
   /* ---------------------------------------------------------------------- */
-  /*  POWER-UPS                                                               */
+  /*  POWER-UPS                                                              */
   /* ---------------------------------------------------------------------- */
 
-  applyPowerup(type) {
+  applyPowerup(type, x, y) {
+    const def = POWERUPS[type];
     this.powerupsCollected++;
+    sounds.playPowerup(type);
+    this.haptic(15);
+    this.createExplosion(x, y, def.color, 22);
+
     if (type === 'feather') {
-      this.score += 5;
-      this.feathersCollected += 5;
-      if (this.score > this.highScore) {
-        this.highScore = this.score;
-        localStorage.setItem('flappy_eagle_highscore', this.highScore.toString());
-      }
-      this.onScoreUpdate(this.score, this.highScore);
+      const gain = 5 * (this.active.double > 0 ? 2 : 1);
+      this.score += gain;
+      this.addPopup(x, y - 20, `+${gain}`, def.color);
+      this.saveBest();
+      this.pushScore();
     } else if (type === 'shield') {
-      this.activePowerups.shield = true;
-    } else if (type === 'slowmo') {
-      this.activePowerups.slowmo = true;
-      this.activePowerups.slowmoTime = 6; // 6 seconds
+      this.active.shield = true;
+      this.addPopup(x, y - 20, 'SHIELD', def.color);
+    } else {
+      this.active[type] = def.duration * 60;   // seconds -> steps
+      this.addPopup(x, y - 20, def.label, def.color);
     }
+
+    if (this.powerupsCollected === 5) this.unlock('collector');
+    this.emit('powerups', this.powerupSnapshot());
   }
 
-  createExplosion(x, y, color) {
-    for (let i = 0; i < 22; i++) {
+  powerupSnapshot() {
+    return {
+      shield: this.active.shield,
+      slowmo: { active: this.active.slowmo > 0, pct: this.active.slowmo / (POWERUPS.slowmo.duration * 60) },
+      magnet: { active: this.active.magnet > 0, pct: this.active.magnet / (POWERUPS.magnet.duration * 60) },
+      double: { active: this.active.double > 0, pct: this.active.double / (POWERUPS.double.duration * 60) },
+      ghost:  { active: this.active.ghost  > 0, pct: this.active.ghost  / (POWERUPS.ghost.duration  * 60) }
+    };
+  }
+
+  createExplosion(x, y, color, count = 22) {
+    const n = Settings.get('reducedMotion') ? Math.round(count * 0.35) : count;
+    for (let i = 0; i < n; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = Math.random() * 5 + 1;
       this.particles.push({
         x, y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        size:  Math.random() * 5 + 2,
-        color,
-        life:  1.0,
-        decay: 0.038
+        size: Math.random() * 5 + 2,
+        color, life: 1.0, decay: 0.038, gravity: 0.1
       });
     }
   }
 
   /* ---------------------------------------------------------------------- */
-  /*  GAME OVER                                                               */
+  /*  DEATH / GAME OVER                                                      */
   /* ---------------------------------------------------------------------- */
 
-  triggerGameOver() {
-    this.state = 'GAMEOVER';
+  triggerDeath() {
+    if (this.state === 'DYING' || this.state === 'GAMEOVER') return;
+    this._landed = false;
+    this.dyingTicks = 0;
+    this.setState('DYING');
     sounds.playHit();
-    this.shakeFrames = 18;
-    this.createExplosion(this.bird.x, this.bird.y, '#c0262d');
+    this.haptic([25, 30, 60]);
+    this.shake(18);
+    this.flash = 0.8;
+    this.createExplosion(this.bird.x, this.bird.y, '#c0262d', 30);
+    this.bird.vy = -5;
+  }
 
-    setTimeout(() => {
-      this.onGameOver({
-        score:     this.score,
-        highScore: this.highScore,
-        distance:  Math.round(this.distance),
-        powerups:  this.powerupsCollected
-      });
-    }, 500);
+  medalFor(score) {
+    const m = this.cfg.medals;
+    if (score >= m.platinum) return 'platinum';
+    if (score >= m.gold) return 'gold';
+    if (score >= m.silver) return 'silver';
+    if (score >= m.bronze) return 'bronze';
+    return null;
+  }
+
+  finishGameOver() {
+    if (this.state === 'GAMEOVER') return;
+    this.setState('GAMEOVER');
+    this.saveBest();
+
+    // Lifetime stats
+    const stats = Object.assign({}, DEFAULT_STATS, Store.get('stats', {}));
+    stats.games += 1;
+    stats.totalScore += this.score;
+    stats.totalDistance += Math.round(this.distance);
+    stats.totalPowerups += this.powerupsCollected;
+    stats.nearMisses += this.nearMisses;
+    stats.bestCombo = Math.max(stats.bestCombo, this.maxCombo);
+    Store.set('stats', stats);
+
+    this.checkLifetimeAchievements(stats);
+
+    const medal = this.medalFor(this.score);
+    if (medal) sounds.playMedal();
+
+    this.emit('gameover', {
+      score: this.score,
+      best: this.best,
+      distance: Math.round(this.distance),
+      powerups: this.powerupsCollected,
+      maxCombo: this.maxCombo,
+      nearMisses: this.nearMisses,
+      medal,
+      newBest: this.beatBest,
+      mode: this.mode,
+      modeLabel: this.cfg.label,
+      stats
+    });
   }
 
   /* ---------------------------------------------------------------------- */
-  /*  ACHIEVEMENTS                                                            */
+  /*  ACHIEVEMENTS                                                           */
   /* ---------------------------------------------------------------------- */
 
-  checkAchievements() {
-    const milestones = {
-      5:  ['First Flight',    'You scored 5 — the journey begins!'],
-      10: ['Eagle Eyes',      'Reached 10! Eyes sharp as an eagle.'],
-      25: ['Storm Rider',     'Score of 25 — riding the storm!'],
-      50: ['Sky Sovereign',   'Score of 50 — you rule the skies!'],
-      100:['Legend of FMS',   'Score of 100 — an absolute legend!']
-    };
-    if (milestones[this.score]) {
-      const [title, desc] = milestones[this.score];
-      this.onAchievement(title, desc);
-    }
+  unlock(id) {
+    const def = ACHIEVEMENTS.find(a => a.id === id);
+    if (!def) return;
+    const owned = Store.get('achievements', []);
+    if (owned.includes(id)) return;
+    owned.push(id);
+    Store.set('achievements', owned);
+    sounds.playAchievement();
+    this.emit('achievement', { id, title: def.title, desc: def.desc, icon: def.icon });
+  }
+
+  /* Score-threshold checks use >= ranges, not exact equality. The old build
+     used milestones[score] so a +5 Golden Feather that jumped 8 -> 13 skipped
+     the "10" achievement entirely and it could never be earned again. */
+  checkRunAchievements() {
+    if (this.score >= 5) this.unlock('first_flight');
+    if (this.score >= 10) this.unlock('eagle_eyes');
+    if (this.score >= 25) this.unlock('storm_rider');
+    if (this.score >= 50) this.unlock('sky_sovereign');
+    if (this.score >= 100) this.unlock('legend');
+    if (this.combo >= 10) this.unlock('combo_10');
+    if (this.combo >= 25) this.unlock('combo_25');
+    if (this.mode === 'hardcore' && this.score >= 20) this.unlock('hardcore_20');
+    if (this.mode === 'zen' && this.score >= 50) this.unlock('zen_master');
+    if (this.score >= 20 && this.powerupsCollected === 0) this.unlock('purist');
+    if (this.ghostPasses >= 1) this.unlock('ghost_walk');
+  }
+
+  checkLifetimeAchievements(stats) {
+    if (stats.games >= 25) this.unlock('persistent');
+    if (stats.totalDistance >= 10000) this.unlock('marathon');
+    const bests = this.bests;
+    if (bests.classic > 0 && bests.hardcore > 0 && bests.zen > 0) this.unlock('all_modes');
   }
 
   /* ---------------------------------------------------------------------- */
-  /*  RENDER                                                                  */
+  /*  RENDER                                                                 */
   /* ---------------------------------------------------------------------- */
 
   render() {
-    this.ctx.save();
+    const ctx = this.ctx;
+    ctx.save();
 
     if (this.shakeFrames > 0) {
-      this.ctx.translate(
-        (Math.random() - 0.5) * 7,
-        (Math.random() - 0.5) * 7
-      );
+      const m = this.shakeFrames / 18;
+      ctx.translate((Math.random() - 0.5) * 9 * m, (Math.random() - 0.5) * 9 * m);
     }
 
     this.drawBackground();
+    this.drawHills();
     this.drawPipes();
     this.drawPowerupItems();
     this.drawParticles();
     this.drawBird();
     this.drawGround();
+    this.drawPopups();
 
-    this.ctx.restore();
+    ctx.restore();
+
+    if (this.flash > 0) {
+      ctx.fillStyle = `rgba(255,90,90,${this.flash * 0.45})`;
+      ctx.fillRect(0, 0, this.width, this.height);
+    }
+
+    if (this.state === 'COUNTDOWN') this.drawCountdown();
+    if (this.active.slowmo > 0) this.drawSlowmoVignette();
+  }
+
+  skyColors() {
+    const s = this.score;
+    let a = SKIES[0], b = SKIES[1];
+    for (let i = 0; i < SKIES.length - 1; i++) {
+      if (s >= SKIES[i].at) { a = SKIES[i]; b = SKIES[i + 1]; }
+    }
+    if (s >= SKIES[SKIES.length - 1].at) { a = b = SKIES[SKIES.length - 1]; }
+    const span = (b.at - a.at) || 1;
+    const t = clamp((s - a.at) / span, 0, 1);
+    return {
+      top: mixHex(a.top, b.top, t),
+      mid: mixHex(a.mid, b.mid, t),
+      bot: mixHex(a.bot, b.bot, t),
+      hill: mixHex(a.hill, b.hill, t),
+      star: lerp(a.star, b.star, t)
+    };
   }
 
   drawBackground() {
-    let top, mid, bot;
-    if (this.score < 15) {
-      top = '#0a0f1e'; mid = '#162033'; bot = '#0d1321';
-    } else if (this.score < 35) {
-      top = '#1a0208'; mid = '#4a1520'; bot = '#0d1321';
-    } else {
-      top = '#03030e'; mid = '#0d0520'; bot = '#050210';
-    }
+    const ctx = this.ctx;
+    const c = this.skyColors();
 
-    const sky = this.ctx.createLinearGradient(0, 0, 0, this.height);
-    sky.addColorStop(0,   top);
-    sky.addColorStop(0.6, mid);
-    sky.addColorStop(1,   bot);
-    this.ctx.fillStyle = sky;
-    this.ctx.fillRect(0, 0, this.width, this.height);
+    const sky = ctx.createLinearGradient(0, 0, 0, this.height);
+    sky.addColorStop(0, c.top);
+    sky.addColorStop(0.6, c.mid);
+    sky.addColorStop(1, c.bot);
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, this.width, this.height);
 
-    // Stars
+    // Stars with slow parallax drift
+    const reduced = Settings.get('reducedMotion');
+    ctx.fillStyle = '#ffffff';
     this.bgStars.forEach(s => {
-      this.ctx.globalAlpha = s.alpha * (0.7 + Math.sin(this.frameCount * 0.04 + s.x * 0.01) * 0.3);
-      this.ctx.fillStyle = '#ffffff';
-      this.ctx.fillRect(s.x, s.y, s.size, s.size);
+      s.x -= s.depth * (this.state === 'PLAYING' ? this.speedMult : 0.25);
+      if (s.x < -3) { s.x = this.width + 3; s.y = Math.random() * this.height * 0.75; }
+      const twinkle = reduced ? 1 : (0.7 + Math.sin(this.frameCount * 0.04 + s.x * 0.01) * 0.3);
+      ctx.globalAlpha = s.alpha * twinkle * c.star;
+      ctx.fillRect(s.x, s.y, s.size, s.size);
     });
-    this.ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1;
 
-    // Clouds
-    this.ctx.fillStyle = 'rgba(255,255,255,0.05)';
-    this.clouds.forEach(c => {
-      this.ctx.beginPath();
-      this.ctx.arc(c.x,             c.y,               28 * c.scale, 0, Math.PI * 2);
-      this.ctx.arc(c.x + 22*c.scale, c.y - 11*c.scale, 33 * c.scale, 0, Math.PI * 2);
-      this.ctx.arc(c.x + 48*c.scale, c.y,               22 * c.scale, 0, Math.PI * 2);
-      this.ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    this.clouds.forEach(cl => {
+      ctx.beginPath();
+      ctx.arc(cl.x, cl.y, 28 * cl.scale, 0, Math.PI * 2);
+      ctx.arc(cl.x + 22 * cl.scale, cl.y - 11 * cl.scale, 33 * cl.scale, 0, Math.PI * 2);
+      ctx.arc(cl.x + 48 * cl.scale, cl.y, 22 * cl.scale, 0, Math.PI * 2);
+      ctx.fill();
     });
   }
 
+  drawHills() {
+    const ctx = this.ctx;
+    const c = this.skyColors();
+    const groundY = this.groundY;
+    const drift = (this.frameCount * 0.28 * (this.state === 'PLAYING' ? this.speedMult : 0.3)) % 90;
+
+    ctx.fillStyle = c.hill;
+    ctx.beginPath();
+    ctx.moveTo(-90, groundY);
+    this.hills.forEach((h, i) => {
+      const x = i * 90 - drift;
+      ctx.lineTo(x, groundY - h.h);
+      ctx.lineTo(x + 45, groundY - h.h * 0.55);
+    });
+    ctx.lineTo(this.width + 90, groundY);
+    ctx.closePath();
+    ctx.fill();
+  }
+
   drawPipes() {
-    const groundY = this.height - 65;
+    const ctx = this.ctx;
+    const groundY = this.groundY;
+    const ghosting = this.active.ghost > 0;
 
     this.pipes.forEach(pipe => {
-      const grad = this.ctx.createLinearGradient(pipe.x, 0, pipe.x + pipe.width, 0);
-      grad.addColorStop(0,   '#1a2540');
-      grad.addColorStop(0.35,'#2e4060');
-      grad.addColorStop(0.65,'#3a5070');
-      grad.addColorStop(1,   '#0e1830');
+      ctx.save();
+      if (ghosting) ctx.globalAlpha = 0.42;
 
-      // ---- Top Pipe ----
-      this.ctx.fillStyle = grad;
-      this.ctx.fillRect(pipe.x, 0, pipe.width, pipe.gapY);
+      const grad = ctx.createLinearGradient(pipe.x, 0, pipe.x + pipe.width, 0);
+      grad.addColorStop(0, '#1a2540');
+      grad.addColorStop(0.35, '#2e4060');
+      grad.addColorStop(0.65, '#3a5070');
+      grad.addColorStop(1, '#0e1830');
 
-      // Rim cap
-      this.ctx.fillStyle = '#546e7a';
-      this.ctx.fillRect(pipe.x - 5, pipe.gapY - 22, pipe.width + 10, 22);
+      const edge = ghosting ? '#e2e8f0' : '#00f2fe';
 
-      // Glowing edge
-      this.ctx.fillStyle = '#00f2fe';
-      this.ctx.shadowColor  = '#00f2fe';
-      this.ctx.shadowBlur   = 8;
-      this.ctx.fillRect(pipe.x - 5, pipe.gapY - 4, pipe.width + 10, 4);
-      this.ctx.shadowBlur = 0;
+      // top
+      ctx.fillStyle = grad;
+      ctx.fillRect(pipe.x, 0, pipe.width, pipe.gapY);
+      ctx.fillStyle = '#546e7a';
+      ctx.fillRect(pipe.x - 5, pipe.gapY - 22, pipe.width + 10, 22);
+      ctx.fillStyle = edge;
+      ctx.shadowColor = edge;
+      ctx.shadowBlur = 8;
+      ctx.fillRect(pipe.x - 5, pipe.gapY - 4, pipe.width + 10, 4);
+      ctx.shadowBlur = 0;
 
-      // ---- Bottom Pipe ----
-      const bottomTop    = pipe.gapY + pipe.gapHeight;
-      const bottomHeight = groundY - bottomTop;
+      // bottom
+      const bottomTop = pipe.gapY + pipe.gapHeight;
+      ctx.fillStyle = grad;
+      ctx.fillRect(pipe.x, bottomTop, pipe.width, Math.max(0, groundY - bottomTop));
+      ctx.fillStyle = '#546e7a';
+      ctx.fillRect(pipe.x - 5, bottomTop, pipe.width + 10, 22);
+      ctx.fillStyle = edge;
+      ctx.shadowColor = edge;
+      ctx.shadowBlur = 8;
+      ctx.fillRect(pipe.x - 5, bottomTop, pipe.width + 10, 4);
+      ctx.shadowBlur = 0;
 
-      this.ctx.fillStyle = grad;
-      this.ctx.fillRect(pipe.x, bottomTop, pipe.width, bottomHeight);
-
-      // Rim cap
-      this.ctx.fillStyle = '#546e7a';
-      this.ctx.fillRect(pipe.x - 5, bottomTop, pipe.width + 10, 22);
-
-      // Glowing edge
-      this.ctx.fillStyle = '#00f2fe';
-      this.ctx.shadowColor = '#00f2fe';
-      this.ctx.shadowBlur  = 8;
-      this.ctx.fillRect(pipe.x - 5, bottomTop, pipe.width + 10, 4);
-      this.ctx.shadowBlur = 0;
+      ctx.restore();
     });
   }
 
   drawPowerupItems() {
+    const ctx = this.ctx;
     this.powerups.forEach(p => {
-      this.ctx.save();
-      const floatY = Math.sin(this.frameCount * 0.11) * 4;
-      this.ctx.translate(p.x, p.y + floatY);
+      ctx.save();
+      const floatY = Settings.get('reducedMotion') ? 0 : Math.sin(this.frameCount * 0.11) * 4;
+      ctx.translate(p.x, p.y + floatY);
 
-      // Glow halo
-      const halo = this.ctx.createRadialGradient(0, 0, 2, 0, 0, p.radius * 2);
-      halo.addColorStop(0,   p.color + 'cc');
+      const halo = ctx.createRadialGradient(0, 0, 2, 0, 0, p.radius * 2);
+      halo.addColorStop(0, p.color + 'cc');
       halo.addColorStop(0.5, p.color + '44');
-      halo.addColorStop(1,   'transparent');
-      this.ctx.fillStyle = halo;
-      this.ctx.beginPath();
-      this.ctx.arc(0, 0, p.radius * 2, 0, Math.PI * 2);
-      this.ctx.fill();
+      halo.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = halo;
+      ctx.beginPath();
+      ctx.arc(0, 0, p.radius * 2, 0, Math.PI * 2);
+      ctx.fill();
 
-      // Emoji icon
-      this.ctx.font = '16px sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.textBaseline = 'middle';
-      const icon = p.type === 'shield' ? '🛡️' : p.type === 'slowmo' ? '⏳' : '🌟';
-      this.ctx.fillText(icon, 0, 1);
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath();
+      ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
 
-      this.ctx.restore();
+      ctx.font = '17px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(POWERUPS[p.type].icon, 0, 1);
+      ctx.restore();
     });
   }
 
   drawBird() {
-    this.ctx.save();
-    this.ctx.translate(this.bird.x, this.bird.y);
-    this.ctx.rotate(this.bird.rotation);
-    this.ctx.scale(this.bird.wingPulse, this.bird.wingPulse);
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.translate(this.bird.x, this.bird.y);
+    ctx.rotate(this.bird.rotation);
+    ctx.scale(this.bird.wingPulse, this.bird.wingPulse);
 
-    // Shield ring
-    if (this.activePowerups.shield) {
-      this.ctx.strokeStyle  = '#00f2fe';
-      this.ctx.lineWidth    = 3;
-      this.ctx.shadowColor  = '#00f2fe';
-      this.ctx.shadowBlur   = 18;
-      this.ctx.beginPath();
-      this.ctx.arc(0, 0, this.bird.radius + 10, 0, Math.PI * 2);
-      this.ctx.stroke();
-      this.ctx.shadowBlur = 0;
+    if (this.active.ghost > 0) ctx.globalAlpha = 0.5;
+
+    if (this.active.shield) {
+      const pulse = 1 + Math.sin(this.frameCount * 0.15) * 0.05;
+      ctx.strokeStyle = POWERUPS.shield.color;
+      ctx.lineWidth = 3;
+      ctx.shadowColor = POWERUPS.shield.color;
+      ctx.shadowBlur = 18;
+      ctx.beginPath();
+      ctx.arc(0, 0, (this.bird.radius + 10) * pulse, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    if (this.active.magnet > 0) {
+      ctx.strokeStyle = POWERUPS.magnet.color;
+      ctx.globalAlpha = 0.35;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 8]);
+      ctx.beginPath();
+      ctx.arc(0, 0, this.bird.radius + 22 + Math.sin(this.frameCount * 0.08) * 4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = this.active.ghost > 0 ? 0.5 : 1;
     }
 
     if (this.birdImgLoaded) {
-      const hw = this.bird.width  / 2;
-      const hh = this.bird.height / 2;
-      this.ctx.drawImage(this.birdImg, -hw, -hh, this.bird.width, this.bird.height);
+      ctx.drawImage(this.birdImg, -this.bird.width / 2, -this.bird.height / 2, this.bird.width, this.bird.height);
     } else {
-      // Fallback circle
-      this.ctx.fillStyle = '#c0262d';
-      this.ctx.beginPath();
-      this.ctx.arc(0, 0, this.bird.radius, 0, Math.PI * 2);
-      this.ctx.fill();
+      ctx.fillStyle = '#c0262d';
+      ctx.beginPath();
+      ctx.arc(0, 0, this.bird.radius, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    this.ctx.restore();
+    if (this.active.double > 0) {
+      ctx.fillStyle = POWERUPS.double.color;
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('×2', 0, -this.bird.height / 2 - 6);
+    }
+
+    ctx.restore();
   }
 
   drawParticles() {
+    const ctx = this.ctx;
     this.particles.forEach(p => {
-      this.ctx.save();
-      this.ctx.globalAlpha = Math.max(0, p.life);
-      this.ctx.fillStyle   = p.color;
-      this.ctx.beginPath();
-      this.ctx.arc(p.x, p.y, Math.max(0.5, p.size * p.life), 0, Math.PI * 2);
-      this.ctx.fill();
-      this.ctx.restore();
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, Math.max(0.5, p.size * p.life), 0, Math.PI * 2);
+      ctx.fill();
     });
+    ctx.globalAlpha = 1;
+  }
+
+  drawPopups() {
+    const ctx = this.ctx;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    this.popups.forEach(p => {
+      ctx.globalAlpha = clamp(p.life, 0, 1);
+      ctx.font = '800 18px Outfit, system-ui, sans-serif';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(0,0,0,0.65)';
+      ctx.strokeText(p.text, p.x, p.y);
+      ctx.fillStyle = p.color;
+      ctx.fillText(p.text, p.x, p.y);
+    });
+    ctx.globalAlpha = 1;
   }
 
   drawGround() {
-    const groundY = this.height - 65;
+    const ctx = this.ctx;
+    const groundY = this.groundY;
 
-    const grad = this.ctx.createLinearGradient(0, groundY, 0, this.height);
+    const grad = ctx.createLinearGradient(0, groundY, 0, this.height);
     grad.addColorStop(0, '#121a2e');
     grad.addColorStop(1, '#080c18');
-    this.ctx.fillStyle = grad;
-    this.ctx.fillRect(0, groundY, this.width, this.height - groundY);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, groundY, this.width, this.height - groundY);
 
-    // Crimson stripe
-    this.ctx.fillStyle    = '#c0262d';
-    this.ctx.shadowColor  = '#c0262d';
-    this.ctx.shadowBlur   = 10;
-    this.ctx.fillRect(0, groundY, this.width, 4);
-    this.ctx.shadowBlur = 0;
+    ctx.fillStyle = '#c0262d';
+    ctx.shadowColor = '#c0262d';
+    ctx.shadowBlur = 10;
+    ctx.fillRect(0, groundY, this.width, 4);
+    ctx.shadowBlur = 0;
 
-    // Scrolling grid perspective lines
-    const speedMult = this.activePowerups.slowmo ? 0.55 : 1.0;
-    const offset = (this.frameCount * 2.5 * speedMult) % 24;
-    this.ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-    this.ctx.lineWidth   = 1;
+    const moving = this.state !== 'PAUSED' && this.state !== 'GAMEOVER';
+    const offset = (this.frameCount * 2.5 * (moving ? this.speedMult : 0)) % 24;
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 1;
     for (let x = -offset; x < this.width + 24; x += 24) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(x, groundY + 4);
-      this.ctx.lineTo(x - 28, this.height);
-      this.ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, groundY + 4);
+      ctx.lineTo(x - 28, this.height);
+      ctx.stroke();
     }
   }
 
+  drawSlowmoVignette() {
+    const ctx = this.ctx;
+    const g = ctx.createRadialGradient(
+      this.width / 2, this.height / 2, this.height * 0.3,
+      this.width / 2, this.height / 2, this.height * 0.8
+    );
+    g.addColorStop(0, 'rgba(168,85,247,0)');
+    g.addColorStop(1, 'rgba(168,85,247,0.25)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, this.width, this.height);
+  }
+
+  drawCountdown() {
+    const ctx = this.ctx;
+    const n = Math.ceil(this.countdown / 45);
+    const phase = (this.countdown % 45) / 45;
+    ctx.save();
+    ctx.globalAlpha = clamp(phase * 1.4, 0, 1);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '900 92px Outfit, system-ui, sans-serif';
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.strokeText(n, this.width / 2, this.height / 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(n, this.width / 2, this.height / 2);
+    ctx.restore();
+  }
+
   /* ---------------------------------------------------------------------- */
-  /*  MAIN LOOP                                                               */
+  /*  MAIN LOOP — variable render rate, fixed 60 Hz simulation               */
   /* ---------------------------------------------------------------------- */
 
   loop(timestamp) {
-    const dt = timestamp - this.lastTime;
-    this.lastTime = timestamp;
-    this.update(dt);
-    this.render();
     requestAnimationFrame((t) => this.loop(t));
+
+    let delta = timestamp - this.lastTime;
+    this.lastTime = timestamp;
+
+    // Returning from a background tab: drop the backlog instead of
+    // fast-forwarding the simulation through it.
+    if (delta > 250) delta = STEP_MS;
+
+    this.accumulator += delta;
+
+    let steps = 0;
+    while (this.accumulator >= STEP_MS && steps < 5) {
+      this.step();
+      this.accumulator -= STEP_MS;
+      steps++;
+    }
+    if (steps === 5) this.accumulator = 0;   // machine can't keep up; don't spiral
+
+    this.render();
   }
 }
+
+/* --------------------------------------------------------------------------
+   ACHIEVEMENT CATALOGUE
+   -------------------------------------------------------------------------- */
+const ACHIEVEMENTS = [
+  { id: 'first_flight',  icon: '🪶', title: 'First Flight',   desc: 'Score 5 points in a single run' },
+  { id: 'eagle_eyes',    icon: '👁️', title: 'Eagle Eyes',     desc: 'Score 10 points in a single run' },
+  { id: 'storm_rider',   icon: '⛈️', title: 'Storm Rider',    desc: 'Score 25 points in a single run' },
+  { id: 'sky_sovereign', icon: '👑', title: 'Sky Sovereign',  desc: 'Score 50 points in a single run' },
+  { id: 'legend',        icon: '🏆', title: 'Legend of FMS',  desc: 'Score 100 points in a single run' },
+  { id: 'combo_10',      icon: '🔥', title: 'Heating Up',     desc: 'Reach a 10-pillar combo' },
+  { id: 'combo_25',      icon: '☄️', title: 'Unbroken',       desc: 'Reach a 25-pillar combo' },
+  { id: 'daredevil',     icon: '⚡', title: 'Daredevil',      desc: '5 close calls in one run' },
+  { id: 'collector',     icon: '🎁', title: 'Collector',      desc: 'Grab 5 power-ups in one run' },
+  { id: 'purist',        icon: '🧘', title: 'Purist',         desc: 'Reach 20 without any power-up' },
+  { id: 'shielded',      icon: '🛡️', title: 'Bounced',        desc: 'Survive a crash with a shield' },
+  { id: 'ghost_walk',    icon: '👻', title: 'Ghost Walk',     desc: 'Phase straight through a pillar' },
+  { id: 'hardcore_20',   icon: '💀', title: 'Iron Wings',     desc: 'Score 20 in Hardcore mode' },
+  { id: 'zen_master',    icon: '🌙', title: 'Zen Master',     desc: 'Score 50 in Zen mode' },
+  { id: 'all_modes',     icon: '🧭', title: 'Well Travelled', desc: 'Set a score in all three modes' },
+  { id: 'persistent',    icon: '🔁', title: 'Persistent',     desc: 'Play 25 runs' },
+  { id: 'marathon',      icon: '🛫', title: 'Marathon',       desc: 'Fly 10,000m in total' }
+];
