@@ -296,7 +296,7 @@ body {
   pointer-events: auto;
 }
 #pause-modal { z-index: 110; }
-#help-modal, #settings-modal, #achievements-modal { z-index: 120; }
+#help-modal, #settings-modal, #achievements-modal, #leaderboard-modal, #leaderboard-entry-modal { z-index: 120; }
 
 .menu-card {
   background: var(--glass-bg);

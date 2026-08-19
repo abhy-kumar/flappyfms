@@ -365,6 +365,17 @@
       showGameOver(lastResult);
     }
 
+    const pilotNameInput = $('pilot-name-input');
+    if (pilotNameInput) {
+      pilotNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          sounds.playClick();
+          saveLeaderboardEntry();
+        }
+      });
+    }
+
     function showGameOver(d) {
       if (!d) return;
       $('final-score').textContent = d.score;
@@ -695,9 +706,21 @@
       });
     }
 
+    // Modal open buttons
     wire('leaderboard-toggle', openLeaderboardModal);
     wire('menu-leaderboard', openLeaderboardModal);
     wire('gameover-leaderboard', openLeaderboardModal);
+
+    wire('menu-help', () => { sounds.playClick(); openModal('help'); });
+    wire('menu-settings', () => { sounds.playClick(); syncSettingsUI(); openModal('settings'); });
+    wire('menu-achievements', () => { sounds.playClick(); renderAchievements(); openModal('achievements'); });
+    wire('gameover-achievements', () => { sounds.playClick(); renderAchievements(); openModal('achievements'); });
+
+    // Modal close buttons
+    wire('leaderboard-close', () => { sounds.playClick(); closeModal('leaderboard'); });
+    wire('help-close', () => { sounds.playClick(); closeModal('help'); });
+    wire('settings-close', () => { sounds.playClick(); closeModal('settings'); });
+    wire('achievements-close', () => { sounds.playClick(); closeModal('achievements'); });
 
     window.addEventListener('ffms_leaderboard_synced', () => {
       if (isOpen('leaderboard')) renderLeaderboard(currentLeaderTab);
