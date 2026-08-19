@@ -1,8 +1,8 @@
 /* ==========================================================================
-   SERVICE WORKER - FLAPPY FMS (PWA OFFLINE CACHE)
+   SERVICE WORKER - FLAPPY FMS (PWA NETWORK-FIRST & OFFLINE CACHE)
    ========================================================================== */
 
-const CACHE_NAME = 'flappyfms-v2.0';
+const CACHE_NAME = 'flappyfms-v2.3';
 const ASSETS = [
   './',
   './index.html',
@@ -22,12 +22,13 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS).catch((err) => {
-        console.warn('SW cache pre-fetch note:', err);
+        console.warn('SW pre-cache note:', err);
       });
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
@@ -42,35 +43,32 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle HTTP/HTTPS GET requests
   if (event.request.method !== 'GET') return;
   if (!event.request.url.startsWith('http')) return;
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Fetch update in background (Stale-While-Revalidate)
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
-          }
-        }).catch(() => {});
-        return cachedResponse;
-      }
+  // Don't intercept Firebase RTDB REST API requests
+  if (event.request.url.includes('firebaseio.com') || event.request.url.includes('firebasedatabase.app')) {
+    return;
+  }
 
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
+  // Network-First for app code (HTML, JS, CSS) to guarantee instant live updates
+  event.respondWith(
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
         return networkResponse;
-      }).catch(() => {
-        // If offline and request is for navigation, return cached index
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-      });
-    })
+      })
+      .catch(() => {
+        // Fallback to cache when offline
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          if (event.request.mode === 'navigate') {
+            return caches.match('./index.html');
+          }
+        });
+      })
   );
 });

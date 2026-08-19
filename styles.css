@@ -413,12 +413,26 @@ body {
    BUTTONS
    ========================================================================== */
 
+button {
+  touch-action: manipulation;
+}
+button > * {
+  pointer-events: none;
+}
+
 .btn-primary,
 .btn-secondary,
 .btn-ghost,
-.btn-danger {
+.btn-danger,
+.btn-install,
+.tab-btn,
+.mode-btn,
+.icon-btn {
   font-family: var(--font-main);
   cursor: pointer;
+  pointer-events: auto !important;
+  user-select: none;
+  -webkit-user-select: none;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
