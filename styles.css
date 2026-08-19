@@ -47,6 +47,50 @@ body {
   position: relative;
 }
 
+/* SEO content article — crawlable by search engines & LLMs but
+   visually hidden from gameplay (position off-screen, not display:none
+   so it IS rendered and counted by Google for content/word count). */
+#seo-content {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+
+/* Game title heading in start menu (styled like h1 but is a <p> to
+   avoid duplicate H1 alongside the SEO article's real H1) */
+.game-title-heading {
+  font-family: var(--font-arcade);
+  font-size: 1.4rem;
+  background: linear-gradient(135deg, #ffffff 0%, #ff8a80 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+/* Game-over modal heading */
+.gameover-heading {
+  font-family: var(--font-arcade);
+  font-size: 1.4rem;
+  color: #ff5252;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+/* Power-up pills: hidden state via CSS class, not inline style */
+.powerup-pill {
+  display: none;
+}
+.powerup-pill.visible {
+  display: flex;
+}
+
 /* App Container - full screen */
 #app-container {
   position: fixed;
@@ -412,11 +456,11 @@ body {
 
 /* Tap to flap prompt */
 .tap-hint {
+  display: none; /* shown via .visible class added by JS */
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
@@ -428,6 +472,9 @@ body {
   padding: 20px 32px;
   border-radius: 18px;
   border: 1px solid rgba(255,255,255,0.18);
+}
+.tap-hint.visible {
+  display: flex;
 }
 
 .tap-icon {

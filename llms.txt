@@ -1,0 +1,43 @@
+# Flappy Eagle
+
+> Flappy Eagle (also known as Flappy FMS) is a free online arcade browser game where players pilot a red eagle through neon-lit pillar obstacles. No download or sign-up required — play instantly in any modern web browser.
+
+## About
+
+Flappy Eagle is a HTML5 Canvas game built with Vanilla JavaScript, CSS3, and the Web Audio API. It features three game modes, collectible power-ups, dynamic parallax sky backgrounds, and a high score leaderboard stored in the browser's localStorage.
+
+## Game Modes
+
+- **Classic**: Standard Flappy Bird-style gameplay with gradually increasing speed.
+- **Hardcore**: Fast-paced mode with moving obstacles and tighter gaps. For experienced players.
+- **Zen**: Relaxed mode with wider gaps and gentle gravity. Great for casual play.
+
+## Power-Ups
+
+- **Golden Feather** 🌟 — Instantly awards +5 bonus points.
+- **Shield Orb** 🛡️ — Absorbs one pillar collision, granting an extra life.
+- **Slow-Mo Clock** ⏳ — Reduces game speed and gravity by 45% for 6 seconds.
+
+## Controls
+
+- **Desktop**: Spacebar or Up Arrow key to flap.
+- **Mobile / Tablet**: Tap or click the screen to flap.
+
+## Technical Stack
+
+- Language: JavaScript (Vanilla, no frameworks)
+- Rendering: HTML5 Canvas API at 60 FPS
+- Audio: Web Audio API (procedural synthesis — zero external audio files)
+- Styling: CSS3 with custom properties and glassmorphism design
+- Storage: Browser localStorage for high score persistence
+
+## Author
+
+Abhishek Kumar
+- GitHub: https://github.com/abhy-kumar
+- Email: abhiks177@gmail.com
+- Project Repository: https://github.com/abhy-kumar/flappyfms
+
+## URL
+
+https://abhy-kumar.github.io/flappyfms/

@@ -20,12 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const finalPowerupsEl  = document.getElementById('final-powerups');
 
   // Buttons
-  const startBtn      = document.getElementById('start-btn');
-  const restartBtn    = document.getElementById('restart-btn');
-  const menuBtn       = document.getElementById('menu-btn');
-  const soundToggle   = document.getElementById('sound-toggle');
-  const statsToggle   = document.getElementById('stats-toggle');
-  const statsClose    = document.getElementById('stats-close');
+  const startBtn    = document.getElementById('start-btn');
+  const restartBtn  = document.getElementById('restart-btn');
+  const menuBtn     = document.getElementById('menu-btn');
+  const soundToggle = document.getElementById('sound-toggle');
+  const statsToggle = document.getElementById('stats-toggle');
+  const statsClose  = document.getElementById('stats-close');
 
   // Power-up pills
   const shieldPill = document.getElementById('shield-pill');
@@ -35,14 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const modeBtns = document.querySelectorAll('.mode-btn');
 
   // Achievement toast
-  const toast        = document.getElementById('achievement-toast');
-  const toastTitle   = document.getElementById('achievement-title');
-  const toastDesc    = document.getElementById('achievement-desc');
+  const toast      = document.getElementById('achievement-toast');
+  const toastTitle = document.getElementById('achievement-title');
+  const toastDesc  = document.getElementById('achievement-desc');
 
   // --- Initialise audio on first user interaction ---
-  document.addEventListener('click',      () => sounds.init(), { once: true });
-  document.addEventListener('keydown',    () => sounds.init(), { once: true });
-  document.addEventListener('pointerdown',() => sounds.init(), { once: true });
+  document.addEventListener('click',       () => sounds.init(), { once: true });
+  document.addEventListener('keydown',     () => sounds.init(), { once: true });
+  document.addEventListener('pointerdown', () => sounds.init(), { once: true });
 
   // Seed high-score display from storage
   highScoreDisplay.textContent = localStorage.getItem('flappy_eagle_highscore') || '0';
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
       finalDistanceEl.textContent  = stats.distance + 'm';
       finalPowerupsEl.textContent  = stats.powerups;
 
-      tapHint.style.display = 'none';
+      hideTapHint();
       refreshPowerupPills();
       gameOverModal.classList.add('active');
     },
@@ -78,13 +78,16 @@ document.addEventListener('DOMContentLoaded', () => {
   );
 
   /* -------------------------------------------------------------------- */
-  /*  UI helpers                                                            */
+  /*  UI helpers — NO inline styles; all visibility via CSS classes         */
   /* -------------------------------------------------------------------- */
 
   function refreshPowerupPills() {
-    shieldPill.style.display = game.activePowerups.shield ? 'flex' : 'none';
-    slowmoPill.style.display = game.activePowerups.slowmo  ? 'flex' : 'none';
+    shieldPill.classList.toggle('visible', game.activePowerups.shield);
+    slowmoPill.classList.toggle('visible', game.activePowerups.slowmo);
   }
+
+  function showTapHint() { tapHint.classList.add('visible'); }
+  function hideTapHint() { tapHint.classList.remove('visible'); }
 
   let achieveTimer = null;
   function showAchievement(title, desc) {
@@ -98,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function startGame() {
     menuModal.classList.remove('active');
     gameOverModal.classList.remove('active');
-    tapHint.style.display = 'flex';
+    showTapHint();
     refreshPowerupPills();
     game.resetGame();
   }
@@ -120,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
   menuBtn.addEventListener('click', () => {
     sounds.playClick();
     gameOverModal.classList.remove('active');
-    tapHint.style.display = 'none';
+    hideTapHint();
     menuModal.classList.add('active');
   });
 
@@ -151,12 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
   /* -------------------------------------------------------------------- */
   /*  Hide tap-hint on first actual flap input                             */
   /* -------------------------------------------------------------------- */
-
-  function hideTapHint() {
-    if (tapHint.style.display !== 'none') {
-      tapHint.style.display = 'none';
-    }
-  }
 
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Space' || e.code === 'ArrowUp') hideTapHint();
