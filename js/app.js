@@ -550,6 +550,8 @@
     /* ------------------------------------------------------------------ */
 
     const pilotInput = $('opt-pilot');
+    const musicInput = $('opt-music');
+    const musicVolumeInput = $('opt-music-volume');
     const volumeInput = $('opt-volume');
     const hapticsInput = $('opt-haptics');
     const shakeInput = $('opt-shake');
@@ -557,7 +559,9 @@
 
     function syncSettingsUI() {
       pilotInput.value = Settings.get('pilotName') || 'FMS_Pilot';
-      volumeInput.value = Math.round(Settings.get('volume') * 100);
+      if (musicInput) musicInput.checked = Settings.get('musicEnabled') !== undefined ? Settings.get('musicEnabled') : true;
+      if (musicVolumeInput) musicVolumeInput.value = Math.round((Settings.get('musicVolume') !== undefined ? Settings.get('musicVolume') : 0.35) * 100);
+      volumeInput.value = Math.round((Settings.get('volume') !== undefined ? Settings.get('volume') : 0.5) * 100);
       hapticsInput.checked = Settings.get('haptics');
       shakeInput.checked = Settings.get('shake');
       motionInput.checked = Settings.get('reducedMotion');
@@ -573,6 +577,21 @@
       sounds.playClick();
       queueToast('<i class="fa-solid fa-id-badge"></i>', 'Call Sign Updated', val);
     });
+
+    if (musicInput) {
+      musicInput.addEventListener('change', () => {
+        sounds.init();
+        sounds.setMusicEnabled(musicInput.checked);
+        sounds.playClick();
+      });
+    }
+
+    if (musicVolumeInput) {
+      musicVolumeInput.addEventListener('input', () => {
+        sounds.init();
+        sounds.setMusicVolume(musicVolumeInput.value / 100);
+      });
+    }
 
     volumeInput.addEventListener('input', () => {
       sounds.init();

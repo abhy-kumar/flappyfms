@@ -84,12 +84,18 @@ function mixHex(a, b, t) {
   return `rgb(${Math.round(lerp(A[0], B[0], t))},${Math.round(lerp(A[1], B[1], t))},${Math.round(lerp(A[2], B[2], t))})`;
 }
 
-/* Sky palettes — smoothly interpolated by score instead of snapping between
-   three hard tiers like the old build did. */
+/* Sky palettes — 5 progressive atmospheric stages smoothly interpolated by score */
 const SKIES = [
-  { at: 0,  top: '#0a0f1e', mid: '#162033', bot: '#0d1321', star: 0.85, hill: '#131c30' },
-  { at: 25, top: '#1a0208', mid: '#4a1520', bot: '#0d1321', star: 0.45, hill: '#2a0d18' },
-  { at: 60, top: '#03030e', mid: '#0d0520', bot: '#050210', star: 1.00, hill: '#0b0620' }
+  // 1. Stage 0 (0-15): Deep Night Sky with Cyan Neon Horizon & Silver Moon
+  { at: 0,   top: '#050814', mid: '#0c1626', bot: '#15243b', star: 0.95, hillFar: '#091120', hillMid: '#101d33', moonColor: '#f1f5f9', moonGlow: 'rgba(0, 242, 254, 0.28)', aurora: 'rgba(0, 242, 254, 0.08)' },
+  // 2. Stage 15 (15-35): Cyber Crimson Dusk & Amber Sunset
+  { at: 15,  top: '#180309', mid: '#380e1a', bot: '#5c1724', star: 0.70, hillFar: '#20070f', hillMid: '#350e1b', moonColor: '#ffe8d6', moonGlow: 'rgba(255, 143, 0, 0.35)', aurora: 'rgba(255, 90, 120, 0.12)' },
+  // 3. Stage 35 (35-65): Cyberpunk Neon Violet & Magenta
+  { at: 35,  top: '#0c031a', mid: '#220938', bot: '#421154', star: 0.85, hillFar: '#160628', hillMid: '#2a0e44', moonColor: '#f3e8ff', moonGlow: 'rgba(168, 85, 247, 0.35)', aurora: 'rgba(217, 70, 239, 0.15)' },
+  // 4. Stage 65 (65-100): Deep Cosmos & Emerald Northern Lights
+  { at: 65,  top: '#020b12', mid: '#041c22', bot: '#083236', star: 1.00, hillFar: '#031318', hillMid: '#06242b', moonColor: '#d1fae5', moonGlow: 'rgba(16, 185, 129, 0.35)', aurora: 'rgba(52, 211, 153, 0.20)' },
+  // 5. Stage 100+: Celestial Golden Starlight & Solar Corona
+  { at: 100, top: '#030209', mid: '#120720', bot: '#280d36', star: 1.00, hillFar: '#090316', hillMid: '#1a0930', moonColor: '#fef3c7', moonGlow: 'rgba(255, 215, 0, 0.45)', aurora: 'rgba(251, 191, 36, 0.25)' }
 ];
 
 /* ========================================================================== */
@@ -219,31 +225,71 @@ class FlappyGame {
   }
 
   initBackgroundElements() {
-    const starCount = Settings.get('reducedMotion') ? 30 : 55;
+    const reduced = Settings.get('reducedMotion');
+    const starCount = reduced ? 35 : 70;
+    const starColors = ['#ffffff', '#e0f2fe', '#fef3c7', '#fed7aa'];
+
     this.bgStars = [];
     for (let i = 0; i < starCount; i++) {
       this.bgStars.push({
         x: Math.random() * this.width,
-        y: Math.random() * this.height * 0.75,
-        size: Math.random() * 2.5 + 0.5,
+        y: Math.random() * this.height * 0.72,
+        size: Math.random() * 2.2 + 0.6,
         alpha: Math.random() * 0.7 + 0.3,
-        depth: Math.random() * 0.25 + 0.05
+        depth: Math.random() * 0.28 + 0.04,
+        phase: Math.random() * Math.PI * 2,
+        color: starColors[Math.floor(Math.random() * starColors.length)]
       });
     }
+
+    this.shootingStars = [];
+
     this.clouds = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 7; i++) {
       this.clouds.push({
         x: Math.random() * this.width,
-        y: Math.random() * (this.height * 0.45) + 40,
-        speed: Math.random() * 0.5 + 0.25,
-        scale: Math.random() * 0.6 + 0.55
+        y: Math.random() * (this.height * 0.44) + 25,
+        speed: Math.random() * 0.4 + 0.18,
+        scale: Math.random() * 0.65 + 0.55
       });
     }
-    // Parallax ridge line behind the pipes.
+
+    // Layer 1: Distant jagged mountain skyline (0.12x parallax)
+    this.farMountains = [];
+    const farSegments = Math.ceil(this.width / 140) + 4;
+    for (let i = 0; i < farSegments; i++) {
+      this.farMountains.push({
+        x: i * 140,
+        h: Math.random() * this.height * 0.22 + this.height * 0.12
+      });
+    }
+
+    // Layer 2: Midground rolling hills (0.28x parallax)
     this.hills = [];
-    const segments = Math.ceil(this.width / 90) + 3;
-    for (let i = 0; i < segments; i++) {
-      this.hills.push({ x: i * 90, h: Math.random() * this.height * 0.16 + this.height * 0.06 });
+    const midSegments = Math.ceil(this.width / 90) + 4;
+    for (let i = 0; i < midSegments; i++) {
+      this.hills.push({
+        x: i * 90,
+        h: Math.random() * this.height * 0.14 + this.height * 0.05
+      });
+    }
+
+    // Layer 3: Floating ambient cyber motes / glowing embers
+    this.ambientMotes = [];
+    if (!reduced) {
+      const moteColors = ['#00f2fe', '#ffd700', '#f43f5e', '#a855f7', '#ffffff'];
+      for (let i = 0; i < 22; i++) {
+        this.ambientMotes.push({
+          x: Math.random() * this.width,
+          y: Math.random() * this.height,
+          vx: Math.random() * 0.4 + 0.2,
+          vy: Math.random() * 0.35 + 0.1,
+          size: Math.random() * 2 + 1,
+          alpha: Math.random() * 0.6 + 0.2,
+          phase: Math.random() * Math.PI * 2,
+          color: moteColors[Math.floor(Math.random() * moteColors.length)]
+        });
+      }
     }
   }
 
@@ -354,6 +400,9 @@ class FlappyGame {
   setState(next) {
     if (this.state === next) return;
     this.state = next;
+    if (typeof sounds !== 'undefined' && sounds.setGameState) {
+      sounds.setGameState(next, this.mode);
+    }
     this.emit('state', { state: next });
   }
 
@@ -484,9 +533,18 @@ class FlappyGame {
     ['slowmo', 'magnet', 'double', 'ghost'].forEach(key => {
       if (this.active[key] > 0) {
         this.active[key]--;
-        if (this.active[key] === 0) this.emit('powerups', this.powerupSnapshot());
+        if (this.active[key] === 0) {
+          this.emit('powerups', this.powerupSnapshot());
+          if (key === 'slowmo' && typeof sounds !== 'undefined' && sounds.setTempoModifier) {
+            sounds.setTempoModifier(1.0);
+          }
+        }
       }
     });
+
+    if (this.active.slowmo > 0 && typeof sounds !== 'undefined' && sounds.setTempoModifier) {
+      sounds.setTempoModifier(0.65);
+    }
 
     // --- bird physics (identical constants to the 60fps original) ---
     const gravityScale = this.active.slowmo ? 0.75 : 1.0;
@@ -1020,7 +1078,11 @@ class FlappyGame {
       top: mixHex(a.top, b.top, t),
       mid: mixHex(a.mid, b.mid, t),
       bot: mixHex(a.bot, b.bot, t),
-      hill: mixHex(a.hill, b.hill, t),
+      hillFar: mixHex(a.hillFar, b.hillFar, t),
+      hillMid: mixHex(a.hillMid, b.hillMid, t),
+      moonColor: b.moonColor || '#ffffff',
+      moonGlow: b.moonGlow || 'rgba(0, 242, 254, 0.25)',
+      aurora: b.aurora || 'rgba(0, 242, 254, 0.08)',
       star: lerp(a.star, b.star, t)
     };
   }
@@ -1028,53 +1090,195 @@ class FlappyGame {
   drawBackground() {
     const ctx = this.ctx;
     const c = this.skyColors();
+    const reduced = Settings.get('reducedMotion');
 
+    // 1. Deep Atmospheric Gradient Sky
     const sky = ctx.createLinearGradient(0, 0, 0, this.height);
     sky.addColorStop(0, c.top);
-    sky.addColorStop(0.6, c.mid);
+    sky.addColorStop(0.55, c.mid);
     sky.addColorStop(1, c.bot);
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, this.width, this.height);
 
-    // Stars with slow parallax drift
-    const reduced = Settings.get('reducedMotion');
+    // 2. Aurora Ribbon Shimmer
+    if (!reduced) {
+      ctx.save();
+      const wave = Math.sin(this.frameCount * 0.015) * 15;
+      const auroraGrad = ctx.createLinearGradient(0, 0, this.width, this.height * 0.45);
+      auroraGrad.addColorStop(0, 'rgba(0,0,0,0)');
+      auroraGrad.addColorStop(0.5, c.aurora);
+      auroraGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = auroraGrad;
+      ctx.beginPath();
+      ctx.moveTo(0, this.height * 0.18 + wave);
+      ctx.bezierCurveTo(
+        this.width * 0.35, this.height * 0.08 - wave,
+        this.width * 0.65, this.height * 0.28 + wave,
+        this.width, this.height * 0.12 - wave
+      );
+      ctx.lineTo(this.width, 0);
+      ctx.lineTo(0, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 3. Cyber Moon / Celestial Body
+    const moonX = this.width * 0.78;
+    const moonY = Math.min(130, this.height * 0.18);
+    const moonR = Math.min(32, this.width * 0.065);
+
+    // Corona outer glow
+    const corona = ctx.createRadialGradient(moonX, moonY, moonR * 0.6, moonX, moonY, moonR * 2.8);
+    corona.addColorStop(0, c.moonGlow);
+    corona.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = corona;
+    ctx.beginPath();
+    ctx.arc(moonX, moonY, moonR * 2.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Moon disc
+    ctx.fillStyle = c.moonColor;
+    ctx.shadowColor = c.moonColor;
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Subtle moon inner shadow / crescent depth
+    ctx.fillStyle = 'rgba(10, 15, 30, 0.45)';
+    ctx.beginPath();
+    ctx.arc(moonX - moonR * 0.35, moonY - moonR * 0.15, moonR * 0.85, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 4. Parallax Starfield & Constellations
     ctx.fillStyle = '#ffffff';
     this.bgStars.forEach(s => {
       s.x -= s.depth * (this.state === 'PLAYING' ? this.speedMult : 0.25);
-      if (s.x < -3) { s.x = this.width + 3; s.y = Math.random() * this.height * 0.75; }
-      const twinkle = reduced ? 1 : (0.7 + Math.sin(this.frameCount * 0.04 + s.x * 0.01) * 0.3);
+      if (s.x < -4) { s.x = this.width + 4; s.y = Math.random() * this.height * 0.72; }
+      const twinkle = reduced ? 1 : (0.65 + Math.sin(this.frameCount * 0.04 + s.phase) * 0.35);
       ctx.globalAlpha = s.alpha * twinkle * c.star;
+      ctx.fillStyle = s.color || '#ffffff';
       ctx.fillRect(s.x, s.y, s.size, s.size);
     });
     ctx.globalAlpha = 1;
 
-    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    // 5. Shooting Stars / Meteor Streaks
+    if (!reduced && this.state !== 'PAUSED') {
+      if (Math.random() < 0.008 && this.shootingStars.length < 2) {
+        this.shootingStars.push({
+          x: Math.random() * this.width * 0.8 + this.width * 0.2,
+          y: Math.random() * this.height * 0.25 + 20,
+          len: Math.random() * 45 + 35,
+          speed: Math.random() * 8 + 10,
+          alpha: 1.0
+        });
+      }
+
+      ctx.lineWidth = 1.8;
+      for (let i = this.shootingStars.length - 1; i >= 0; i--) {
+        const star = this.shootingStars[i];
+        star.x -= star.speed;
+        star.y += star.speed * 0.45;
+        star.alpha -= 0.035;
+
+        if (star.alpha <= 0 || star.x < -100 || star.y > this.height) {
+          this.shootingStars.splice(i, 1);
+          continue;
+        }
+
+        const trail = ctx.createLinearGradient(star.x, star.y, star.x + star.len, star.y - star.len * 0.45);
+        trail.addColorStop(0, `rgba(255, 255, 255, ${star.alpha})`);
+        trail.addColorStop(1, 'rgba(0, 242, 254, 0)');
+        ctx.strokeStyle = trail;
+        ctx.beginPath();
+        ctx.moveTo(star.x, star.y);
+        ctx.lineTo(star.x + star.len, star.y - star.len * 0.45);
+        ctx.stroke();
+      }
+    }
+
+    // 6. Volumetric Layered Clouds
     this.clouds.forEach(cl => {
+      cl.x -= cl.speed * (this.state === 'PLAYING' ? this.speedMult : 0.4);
+      if (cl.x < -120 * cl.scale) {
+        cl.x = this.width + 100;
+        cl.y = Math.random() * (this.height * 0.42) + 30;
+      }
+
+      ctx.save();
+      const cloudGrad = ctx.createLinearGradient(cl.x, cl.y - 30 * cl.scale, cl.x, cl.y + 20 * cl.scale);
+      cloudGrad.addColorStop(0, 'rgba(255, 255, 255, 0.09)');
+      cloudGrad.addColorStop(1, 'rgba(255, 255, 255, 0.02)');
+      ctx.fillStyle = cloudGrad;
+
       ctx.beginPath();
       ctx.arc(cl.x, cl.y, 28 * cl.scale, 0, Math.PI * 2);
-      ctx.arc(cl.x + 22 * cl.scale, cl.y - 11 * cl.scale, 33 * cl.scale, 0, Math.PI * 2);
-      ctx.arc(cl.x + 48 * cl.scale, cl.y, 22 * cl.scale, 0, Math.PI * 2);
+      ctx.arc(cl.x + 22 * cl.scale, cl.y - 12 * cl.scale, 34 * cl.scale, 0, Math.PI * 2);
+      ctx.arc(cl.x + 48 * cl.scale, cl.y, 24 * cl.scale, 0, Math.PI * 2);
+      ctx.arc(cl.x + 28 * cl.scale, cl.y + 8 * cl.scale, 20 * cl.scale, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     });
+
+    // 7. Ambient Cyber Motes / Floating Stardust
+    if (!reduced) {
+      this.ambientMotes.forEach(m => {
+        m.x -= m.vx * (this.state === 'PLAYING' ? this.speedMult : 0.3);
+        m.y -= m.vy;
+        if (m.x < -10) m.x = this.width + 10;
+        if (m.y < -10) m.y = this.groundY;
+
+        const pulse = 0.5 + Math.sin(this.frameCount * 0.05 + m.phase) * 0.5;
+        ctx.fillStyle = m.color;
+        ctx.globalAlpha = m.alpha * pulse;
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    }
   }
 
   drawHills() {
     const ctx = this.ctx;
     const c = this.skyColors();
     const groundY = this.groundY;
-    const drift = (this.frameCount * 0.28 * (this.state === 'PLAYING' ? this.speedMult : 0.3)) % 90;
+    const speed = this.state === 'PLAYING' ? this.speedMult : 0.3;
 
-    ctx.fillStyle = c.hill;
+    // Layer 1: Distant Mountains / Skyline (0.12x Parallax)
+    const farDrift = (this.frameCount * 0.12 * speed) % 140;
+    ctx.fillStyle = c.hillFar;
+    ctx.beginPath();
+    ctx.moveTo(-140, groundY);
+    this.farMountains.forEach((m, i) => {
+      const x = i * 140 - farDrift;
+      ctx.lineTo(x, groundY - m.h);
+      ctx.lineTo(x + 70, groundY - m.h * 0.6);
+    });
+    ctx.lineTo(this.width + 140, groundY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Layer 2: Midground Rolling Hills with Glowing Crest (0.28x Parallax)
+    const midDrift = (this.frameCount * 0.28 * speed) % 90;
+    ctx.fillStyle = c.hillMid;
     ctx.beginPath();
     ctx.moveTo(-90, groundY);
     this.hills.forEach((h, i) => {
-      const x = i * 90 - drift;
+      const x = i * 90 - midDrift;
       ctx.lineTo(x, groundY - h.h);
       ctx.lineTo(x + 45, groundY - h.h * 0.55);
     });
     ctx.lineTo(this.width + 90, groundY);
     ctx.closePath();
     ctx.fill();
+
+    // Hill crest rim light
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
   }
 
   drawPipes() {

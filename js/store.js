@@ -83,6 +83,8 @@ const Store = (() => {
 const DEFAULT_SETTINGS = {
   muted: false,
   volume: 0.5,
+  musicEnabled: true,
+  musicVolume: 0.35,
   haptics: true,
   shake: true,
   reducedMotion: false,
