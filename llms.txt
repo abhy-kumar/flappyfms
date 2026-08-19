@@ -14,12 +14,12 @@ Flappy FMS is a HTML5 Canvas game built with Vanilla JavaScript, CSS3 and the We
 
 ## Power-Ups
 
-- **Golden Feather** 🌟 — Instantly awards +5 bonus points.
-- **Shield Orb** 🛡️ — Absorbs one pillar collision, granting an extra life.
-- **Slow-Mo Clock** ⏳ — Reduces game speed by 45% and gravity by 25% for 6 seconds.
-- **Magnet** 🧲 — Pulls nearby power-ups toward the player for 8 seconds.
-- **2× Points** 💎 — Doubles all points scored for 10 seconds, stacking with the combo multiplier.
-- **Ghost** 👻 — Phase straight through pillars without crashing for 5 seconds.
+- **Golden Feather** — Instantly awards +5 bonus points.
+- **Shield Orb** — Absorbs one pillar collision, granting an extra life.
+- **Slow-Mo Clock** — Reduces game speed by 45% and gravity by 25% for 6 seconds.
+- **Magnet** — Pulls nearby power-ups toward the player for 8 seconds.
+- **2× Points** — Doubles all points scored for 10 seconds, stacking with the combo multiplier.
+- **Ghost** — Phase straight through pillars without crashing for 5 seconds.
 
 ## Scoring
 

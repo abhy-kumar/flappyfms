@@ -1,43 +1,43 @@
-# 🦅 Flappy Eagle – Free Browser Arcade Game
+# Flappy FMS – Free Browser Arcade Game
 
-[![Play Now](https://img.shields.io/badge/▶%20Play%20Now-Live%20Demo-c0262d?style=for-the-badge&logo=google-chrome&logoColor=white)](https://abhy-kumar.github.io/flappyfms/)
+[![Play Now](https://img.shields.io/badge/Play%20Now-Live%20Demo-c0262d?style=for-the-badge&logo=google-chrome&logoColor=white)](https://abhy-kumar.github.io/flappyfms/)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/abhy-kumar/flappyfms)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
-**Flappy Eagle** (Flappy FMS) is a free, full-screen HTML5 Canvas arcade game. Guide a soaring red eagle through neon-lit pillar gaps, collect power-ups, earn medals, and chase a high score — no download, no sign-up, instant play in any modern browser.
+**Flappy FMS** is a free, full-screen HTML5 Canvas arcade game. Guide a soaring red eagle through neon-lit pillar gaps, collect power-ups, earn medals, and chase a high score — no download, no sign-up, instant play in any modern browser.
 
 This project is also a hands-on showcase of **Digital Marketing**, **Technical SEO**, **Generative Engine Optimization (GEO)**, and **Growth Hacking** concepts.
 
 ---
 
-## 🎮 Game Features
+## Game Features
 
 ### Three Game Modes
 | Mode | Description | Gap Size | Pipe Speed |
 |---|---|---|---|
-| **Classic** | Steadily increasing challenge | 38% of screen height | 2.4 → ramps up |
-| **Hardcore** | Moving pillars, tighter gaps | 30% of screen height | 3.2 → ramps up |
+| **Classic** | Steadily increasing challenge | 38% of screen height | 2.4 -> ramps up |
+| **Hardcore** | Moving pillars, tighter gaps | 30% of screen height | 3.2 -> ramps up |
 | **Zen** | Relaxed, no ramp-up | 46% of screen height | 1.8 (constant) |
 
 ### Six Power-Ups
 | Power-Up | Effect | Duration |
 |---|---|---|
-| 🌟 Golden Feather | +5 bonus points instantly | Instant |
-| 🛡️ Shield Orb | Absorbs one pillar collision | Until hit |
-| ⏳ Slow-Mo Clock | Slows everything by 45% | 6 seconds |
-| 🧲 Magnet | Attracts nearby collectibles | 8 seconds |
-| 💎 2× Points | Doubles scoring multiplier | 10 seconds |
-| 👻 Ghost | Pass through one pillar | 5 seconds |
+| Golden Feather | +5 bonus points instantly | Instant |
+| Shield Orb | Absorbs one pillar collision | Until hit |
+| Slow-Mo Clock | Slows everything by 45% | 6 seconds |
+| Magnet | Attracts nearby collectibles | 8 seconds |
+| 2x Points | Doubles scoring multiplier | 10 seconds |
+| Ghost | Pass through one pillar | 5 seconds |
 
 ### Medal System
 Earn **Bronze**, **Silver**, **Gold**, or **Platinum** medals by hitting score thresholds that vary per game mode. Medal targets are tighter in Hardcore and more generous in Zen.
 
 ### Score Multiplier / Combo System
-Consecutive near-misses and power-up chains build a combo multiplier (up to ×5), shown as a HUD chip. It drives exponential high-score growth and encourages aggressive play.
+Consecutive near-misses and power-up chains build a combo multiplier (up to 5x), shown as a HUD chip. It drives exponential high-score growth and encourages aggressive play.
 
 ### Other Features
 - **Achievements system** — unlockable milestones persisted across sessions
-- **Pause / Resume** — Escape or P key, or the ⏸ HUD button
+- **Pause / Resume** — Escape or P key, or the pause button in HUD
 - **Share button** — native share sheet on mobile, clipboard fallback on desktop
 - **Auto-pause** on tab switch or window blur
 - **Per-mode high scores** stored via the `Store` module (safe `localStorage` wrapper)
@@ -50,7 +50,7 @@ Consecutive near-misses and power-up chains build a combo multiplier (up to ×5)
 
 ---
 
-## 🛠️ Technical Architecture
+## Technical Architecture
 
 ```
 flappyfms/
@@ -71,7 +71,7 @@ flappyfms/
 ### Engine Design Highlights (`game.js`)
 - **Fixed 60 Hz timestep** behind a variable-rate render loop — physics behave identically on 60/120/144 Hz displays
 - **Distance-based pipe spawning** — `pipeSpacingPx` guarantees constant pixel spacing regardless of screen width or frame rate, completely eliminating the "impossible wall" bug from frame-interval spawning
-- **Proportional gap sizing** — `pipeGapFrac × canvasHeight` so gaps are always fair on any screen from mobile to ultrawide
+- **Proportional gap sizing** — `pipeGapFrac * canvasHeight` so gaps are always fair on any screen from mobile to ultrawide
 - **Live resize handling** — `visualViewport` + `resize` events rescale the world mid-flight (mobile URL bar, orientation change) without repositioning the bird unfairly
 - **DPR-aware canvas** — re-reads `devicePixelRatio` on every resize so zooming or moving to a HiDPI monitor stays crisp
 - **Weighted power-up spawning** — each power-up has a `weight` property; rare items (Ghost, Magnet) appear far less often than common ones (Feather, Shield)
@@ -91,19 +91,19 @@ flappyfms/
 
 ---
 
-## 📣 Digital Marketing Concepts Implemented
+## Digital Marketing Concepts Implemented
 
 ### 1. Gamification & The Hook Model
 The game deliberately encodes the four-stage Hook Model to maximise **session depth** and **return visits**:
 
 ```
-   [ TRIGGER ]  → Nostalgic arcade aesthetic, share links, achievement notifications
+   [ TRIGGER ]  -> Arcade aesthetic, share links, achievement notifications
        ↓
-   [ ACTION ]   → Single tap/click — lowest possible friction to enter the game loop
+   [ ACTION ]   -> Single tap/click — lowest possible friction to enter the game loop
        ↓
-   [ VARIABLE REWARD ] → Unpredictable gaps, random power-up types, medal surprises
+   [ VARIABLE REWARD ] -> Unpredictable gaps, random power-up types, medal surprises
        ↓
-   [ INVESTMENT ] → Per-mode high scores, achievements, lifetime stats, combo mastery
+   [ INVESTMENT ] -> Per-mode high scores, achievements, lifetime stats, combo mastery
 ```
 
 Each investment hooks back into the trigger — a new personal best creates an internal drive to return.
@@ -146,21 +146,21 @@ Three JSON-LD schemas in `<head>`:
 | **Download size** | 0.10 MB |
 | **Compression rate** | 46% (HTML 69%, CSS 74%, JS 72%) |
 | **JavaScript errors** | Zero |
-| **HTTP/2** | ✅ |
-| **SSL/HTTPS** | ✅ |
+| **HTTP/2** | Enabled |
+| **SSL/HTTPS** | Enabled |
 
 Zero third-party runtime frameworks — Vanilla JS + native Canvas API + Web Audio API. No React, no jQuery, no build step.
 
 ### 7. Conversion Rate Optimisation (CRO)
 - **Zero-friction entry** — no sign-up, no download, no app store. Click and play.
-- **Clear primary CTA** — high-contrast crimson `START FLIGHT ▶` button with immediate visual feedback
-- **Mobile-first responsive** — `100vw × 100vh` canvas, `pointer-events` touch handling, `contextmenu` suppressed
+- **Clear primary CTA** — high-contrast crimson `START FLIGHT` button with immediate visual feedback
+- **Mobile-first responsive** — `100vw * 100vh` canvas, `pointer-events` touch handling, `contextmenu` suppressed
 - **Reduced-motion support** — respects OS accessibility preferences, widening the accessible audience
 - **Auto-pause** on blur — prevents return-to-dead-bird frustration that causes abandonment
 
 ---
 
-## 🚀 Local Development
+## Local Development
 
 ### Prerequisites
 - Python 3.x (for local dev server)
@@ -188,12 +188,12 @@ Open [http://localhost:8080](http://localhost:8080).
 | Action | Desktop | Mobile |
 |---|---|---|
 | Flap | `Space`, `↑`, `W` | Tap / Click |
-| Pause | `Escape`, `P` | ⏸ button |
-| Mute | `M` | 🔊 button |
+| Pause | `Escape`, `P` | Pause button |
+| Mute | `M` | Mute button |
 
 ---
 
-## 🌐 Deployment
+## Deployment
 
 Deployed via **GitHub Pages** from the `main` branch.
 
@@ -205,10 +205,10 @@ Deployed via **GitHub Pages** from the `main` branch.
 
 ---
 
-## 👤 Author
+## Author
 
 **Abhishek Kumar**
 - GitHub: [@abhy-kumar](https://github.com/abhy-kumar)
 - Email: [abhiks177@gmail.com](mailto:abhiks177@gmail.com)
 
-*Built with ❤️ — where game dev meets digital marketing.*
+*Built with pride — where game development meets digital marketing.*

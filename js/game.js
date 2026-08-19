@@ -58,12 +58,12 @@ const MODES = {
    POWER-UP DEFINITIONS
    -------------------------------------------------------------------------- */
 const POWERUPS = {
-  feather: { icon: '🌟', color: '#ffb703', label: 'GOLDEN FEATHER', weight: 30, duration: 0 },
-  shield:  { icon: '🛡️', color: '#00f2fe', label: 'SHIELD',         weight: 20, duration: 0 },
-  slowmo:  { icon: '⏳', color: '#a855f7', label: 'SLOW-MO',        weight: 16, duration: 6 },
-  magnet:  { icon: '🧲', color: '#f43f5e', label: 'MAGNET',         weight: 14, duration: 8 },
-  double:  { icon: '💎', color: '#22d3ee', label: '2× POINTS',      weight: 13, duration: 10 },
-  ghost:   { icon: '👻', color: '#e2e8f0', label: 'GHOST',          weight: 7,  duration: 5 }
+  feather: { icon: '<i class="fa-solid fa-star"></i>',           color: '#ffb703', label: 'GOLDEN FEATHER', weight: 30, duration: 0 },
+  shield:  { icon: '<i class="fa-solid fa-shield-halved"></i>',  color: '#00f2fe', label: 'SHIELD',         weight: 20, duration: 0 },
+  slowmo:  { icon: '<i class="fa-solid fa-hourglass-half"></i>', color: '#a855f7', label: 'SLOW-MO',        weight: 16, duration: 6 },
+  magnet:  { icon: '<i class="fa-solid fa-magnet"></i>',         color: '#f43f5e', label: 'MAGNET',         weight: 14, duration: 8 },
+  double:  { icon: '<i class="fa-solid fa-gem"></i>',            color: '#22d3ee', label: '2× POINTS',      weight: 13, duration: 10 },
+  ghost:   { icon: '<i class="fa-solid fa-ghost"></i>',          color: '#e2e8f0', label: 'GHOST',          weight: 7,  duration: 5 }
 };
 
 const NEAR_MISS_PX = 20;   // clearance under this counts as a close call
@@ -1124,16 +1124,112 @@ class FlappyGame {
 
       ctx.strokeStyle = p.color;
       ctx.lineWidth = 2;
-      ctx.globalAlpha = 0.8;
+      ctx.globalAlpha = 0.85;
       ctx.beginPath();
       ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
       ctx.stroke();
       ctx.globalAlpha = 1;
 
-      ctx.font = '17px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(POWERUPS[p.type].icon, 0, 1);
+      // Crisp vector icon rendering per power-up type
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#ffffff';
+
+      switch (p.type) {
+        case 'feather': // 5-point star
+          ctx.beginPath();
+          for (let i = 0; i < 5; i++) {
+            const outerA = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+            const innerA = outerA + (2 * Math.PI) / 10;
+            const ox = Math.cos(outerA) * 8.5;
+            const oy = Math.sin(outerA) * 8.5;
+            const ix = Math.cos(innerA) * 4.2;
+            const iy = Math.sin(innerA) * 4.2;
+            if (i === 0) ctx.moveTo(ox, oy);
+            else ctx.lineTo(ox, oy);
+            ctx.lineTo(ix, iy);
+          }
+          ctx.closePath();
+          ctx.fill();
+          break;
+
+        case 'shield': // Shield badge
+          ctx.beginPath();
+          ctx.moveTo(0, -8);
+          ctx.quadraticCurveTo(7, -8, 7, -1);
+          ctx.quadraticCurveTo(7, 6, 0, 9);
+          ctx.quadraticCurveTo(-7, 6, -7, -1);
+          ctx.quadraticCurveTo(-7, -8, 0, -8);
+          ctx.closePath();
+          ctx.fill();
+          break;
+
+        case 'slowmo': // Hourglass
+          ctx.beginPath();
+          ctx.moveTo(-6, -7);
+          ctx.lineTo(6, -7);
+          ctx.lineTo(0, 0);
+          ctx.lineTo(6, 7);
+          ctx.lineTo(-6, 7);
+          ctx.lineTo(0, 0);
+          ctx.closePath();
+          ctx.fill();
+          break;
+
+        case 'magnet': // U-magnet
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, 1, 5.5, Math.PI, 0, true);
+          ctx.lineTo(5.5, -6);
+          ctx.moveTo(-5.5, 1);
+          ctx.lineTo(-5.5, -6);
+          ctx.stroke();
+          // Red tips
+          ctx.fillStyle = '#f43f5e';
+          ctx.fillRect(-7.2, -7.5, 3.5, 3);
+          ctx.fillRect(3.8, -7.5, 3.5, 3);
+          break;
+
+        case 'double': // Gem / Diamond
+          ctx.beginPath();
+          ctx.moveTo(0, -8);
+          ctx.lineTo(7, -2);
+          ctx.lineTo(0, 8);
+          ctx.lineTo(-7, -2);
+          ctx.closePath();
+          ctx.fill();
+          // Facet line
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-7, -2);
+          ctx.lineTo(7, -2);
+          ctx.stroke();
+          break;
+
+        case 'ghost': // Ghost silhouette
+          ctx.beginPath();
+          ctx.arc(0, -2, 6.5, Math.PI, 0, false);
+          ctx.lineTo(6.5, 6.5);
+          ctx.lineTo(3.2, 4);
+          ctx.lineTo(0, 6.5);
+          ctx.lineTo(-3.2, 4);
+          ctx.lineTo(-6.5, 6.5);
+          ctx.closePath();
+          ctx.fill();
+          // Eyes
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath();
+          ctx.arc(-2.2, -2, 1.4, 0, Math.PI * 2);
+          ctx.arc(2.2, -2, 1.4, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+
+        default:
+          ctx.beginPath();
+          ctx.arc(0, 0, 5, 0, Math.PI * 2);
+          ctx.fill();
+      }
+
       ctx.restore();
     });
   }
@@ -1307,21 +1403,21 @@ class FlappyGame {
    ACHIEVEMENT CATALOGUE
    -------------------------------------------------------------------------- */
 const ACHIEVEMENTS = [
-  { id: 'first_flight',  icon: '🪶', title: 'First Flight',   desc: 'Score 5 points in a single run' },
-  { id: 'eagle_eyes',    icon: '👁️', title: 'Eagle Eyes',     desc: 'Score 10 points in a single run' },
-  { id: 'storm_rider',   icon: '⛈️', title: 'Storm Rider',    desc: 'Score 25 points in a single run' },
-  { id: 'sky_sovereign', icon: '👑', title: 'Sky Sovereign',  desc: 'Score 50 points in a single run' },
-  { id: 'legend',        icon: '🏆', title: 'Legend of FMS',  desc: 'Score 100 points in a single run' },
-  { id: 'combo_10',      icon: '🔥', title: 'Heating Up',     desc: 'Reach a 10-pillar combo' },
-  { id: 'combo_25',      icon: '☄️', title: 'Unbroken',       desc: 'Reach a 25-pillar combo' },
-  { id: 'daredevil',     icon: '⚡', title: 'Daredevil',      desc: '5 close calls in one run' },
-  { id: 'collector',     icon: '🎁', title: 'Collector',      desc: 'Grab 5 power-ups in one run' },
-  { id: 'purist',        icon: '🧘', title: 'Purist',         desc: 'Reach 20 without any power-up' },
-  { id: 'shielded',      icon: '🛡️', title: 'Bounced',        desc: 'Survive a crash with a shield' },
-  { id: 'ghost_walk',    icon: '👻', title: 'Ghost Walk',     desc: 'Phase straight through a pillar' },
-  { id: 'hardcore_20',   icon: '💀', title: 'Iron Wings',     desc: 'Score 20 in Hardcore mode' },
-  { id: 'zen_master',    icon: '🌙', title: 'Zen Master',     desc: 'Score 50 in Zen mode' },
-  { id: 'all_modes',     icon: '🧭', title: 'Well Travelled', desc: 'Set a score in all three modes' },
-  { id: 'persistent',    icon: '🔁', title: 'Persistent',     desc: 'Play 25 runs' },
-  { id: 'marathon',      icon: '🛫', title: 'Marathon',       desc: 'Fly 10,000m in total' }
+  { id: 'first_flight',  icon: '<i class="fa-solid fa-feather"></i>',         title: 'First Flight',   desc: 'Score 5 points in a single run' },
+  { id: 'eagle_eyes',    icon: '<i class="fa-solid fa-eye"></i>',             title: 'Eagle Eyes',     desc: 'Score 10 points in a single run' },
+  { id: 'storm_rider',   icon: '<i class="fa-solid fa-cloud-bolt"></i>',      title: 'Storm Rider',    desc: 'Score 25 points in a single run' },
+  { id: 'sky_sovereign', icon: '<i class="fa-solid fa-crown"></i>',           title: 'Sky Sovereign',  desc: 'Score 50 points in a single run' },
+  { id: 'legend',        icon: '<i class="fa-solid fa-trophy"></i>',          title: 'Legend of FMS',  desc: 'Score 100 points in a single run' },
+  { id: 'combo_10',      icon: '<i class="fa-solid fa-fire"></i>',            title: 'Heating Up',     desc: 'Reach a 10-pillar combo' },
+  { id: 'combo_25',      icon: '<i class="fa-solid fa-meteor"></i>',          title: 'Unbroken',       desc: 'Reach a 25-pillar combo' },
+  { id: 'daredevil',     icon: '<i class="fa-solid fa-bolt"></i>',            title: 'Daredevil',      desc: '5 close calls in one run' },
+  { id: 'collector',     icon: '<i class="fa-solid fa-gift"></i>',            title: 'Collector',      desc: 'Grab 5 power-ups in one run' },
+  { id: 'purist',        icon: '<i class="fa-solid fa-spa"></i>',             title: 'Purist',         desc: 'Reach 20 without any power-up' },
+  { id: 'shielded',      icon: '<i class="fa-solid fa-shield-halved"></i>',   title: 'Bounced',        desc: 'Survive a crash with a shield' },
+  { id: 'ghost_walk',    icon: '<i class="fa-solid fa-ghost"></i>',           title: 'Ghost Walk',     desc: 'Phase straight through a pillar' },
+  { id: 'hardcore_20',   icon: '<i class="fa-solid fa-skull"></i>',           title: 'Iron Wings',     desc: 'Score 20 in Hardcore mode' },
+  { id: 'zen_master',    icon: '<i class="fa-solid fa-moon"></i>',            title: 'Zen Master',     desc: 'Score 50 in Zen mode' },
+  { id: 'all_modes',     icon: '<i class="fa-solid fa-compass"></i>',         title: 'Well Travelled', desc: 'Set a score in all three modes' },
+  { id: 'persistent',    icon: '<i class="fa-solid fa-rotate-right"></i>',    title: 'Persistent',     desc: 'Play 25 runs' },
+  { id: 'marathon',      icon: '<i class="fa-solid fa-plane-departure"></i>', title: 'Marathon',       desc: 'Fly 10,000m in total' }
 ];

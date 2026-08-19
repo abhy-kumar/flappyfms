@@ -158,6 +158,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles.css">
+  <!-- Font Awesome 6 Free — icon library replacing all emoji in the UI -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body>
 
@@ -290,9 +292,9 @@
           </div>
         </div>
         <div class="hud-actions">
-          <button class="icon-btn" id="pause-toggle" title="Pause (Esc)" aria-label="Pause game" disabled>⏸</button>
-          <button class="icon-btn" id="sound-toggle" title="Sound (M)" aria-label="Mute sound" aria-pressed="false">🔊</button>
-          <button class="icon-btn" id="help-toggle"  title="How to play" aria-label="Open how to play guide">?</button>
+          <button class="icon-btn" id="pause-toggle" title="Pause (Esc)" aria-label="Pause game" disabled><i class="fa-solid fa-pause" aria-hidden="true"></i></button>
+          <button class="icon-btn" id="sound-toggle" title="Sound (M)" aria-label="Mute sound" aria-pressed="false"><i class="fa-solid fa-volume-high" aria-hidden="true"></i></button>
+          <button class="icon-btn" id="help-toggle"  title="How to play" aria-label="Open how to play guide"><i class="fa-solid fa-circle-question" aria-hidden="true"></i></button>
         </div>
       </div>
     </div>
@@ -302,7 +304,7 @@
 
     <!-- ── TAP HINT ────────────────────────────────────────────── -->
     <div class="tap-hint" id="tap-hint" aria-hidden="true">
-      <div class="tap-icon">🦅</div>
+      <div class="tap-icon"><i class="fa-solid fa-feather-pointed" aria-hidden="true"></i></div>
       <div class="tap-text">TAP &nbsp;·&nbsp; CLICK &nbsp;·&nbsp; SPACE</div>
       <div class="tap-sub">to flap</div>
     </div>
@@ -335,7 +337,7 @@
         </div>
 
         <button class="btn-primary" id="start-btn" data-autofocus aria-label="Start Flappy FMS game">
-          <span>START FLIGHT</span> <span aria-hidden="true">▶</span>
+          <span>START FLIGHT</span> <i class="fa-solid fa-play" aria-hidden="true"></i>
         </button>
 
         <div class="btn-row">
@@ -364,7 +366,7 @@
     <div class="modal-screen" id="gameover-modal" role="dialog" aria-modal="true" aria-labelledby="gameover-heading">
       <div class="menu-card">
 
-        <div class="newbest-ribbon" id="newbest-ribbon">🏅 NEW PERSONAL BEST</div>
+        <div class="newbest-ribbon" id="newbest-ribbon"><i class="fa-solid fa-star" aria-hidden="true"></i> NEW PERSONAL BEST</div>
 
         <div class="game-title">
           <h2 class="gameover-heading" id="gameover-heading">FLIGHT ENDED</h2>
@@ -372,7 +374,7 @@
         </div>
 
         <div class="medal-wrap" id="medal-wrap">
-          <div class="medal-icon" id="medal-icon" aria-hidden="true">🥉</div>
+          <div class="medal-icon" id="medal-icon" aria-hidden="true"><i class="fa-solid fa-medal"></i></div>
           <div class="medal-text">
             <strong id="medal-label">BRONZE MEDAL</strong>
             <em id="medal-next">15 more for SILVER</em>
@@ -389,7 +391,7 @@
         </div>
 
         <button class="btn-primary" id="restart-btn" data-autofocus aria-label="Try again">
-          <span>TRY AGAIN</span> <span aria-hidden="true">🔄</span>
+          <span>TRY AGAIN</span> <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
         </button>
 
         <div class="btn-row">
@@ -411,7 +413,7 @@
           <p>Take a breath — your run is waiting</p>
         </div>
         <button class="btn-primary" id="pause-resume" data-autofocus>
-          <span>RESUME</span> <span aria-hidden="true">▶</span>
+          <span>RESUME</span> <i class="fa-solid fa-play" aria-hidden="true"></i>
         </button>
         <button class="btn-secondary" id="pause-restart">RESTART RUN</button>
         <button class="btn-secondary" id="pause-menu">MAIN MENU</button>
@@ -430,12 +432,12 @@
         </div>
 
         <ul class="help-list">
-          <li><span class="help-ico">🌟</span> <span><strong>Golden Feather</strong><em>+5 points instantly</em></span></li>
-          <li><span class="help-ico">🛡️</span> <span><strong>Shield</strong><em>Absorbs one crash</em></span></li>
-          <li><span class="help-ico">⏳</span> <span><strong>Slow-Mo</strong><em>Slows the world for 6s</em></span></li>
-          <li><span class="help-ico">🧲</span> <span><strong>Magnet</strong><em>Pulls pickups to you for 8s</em></span></li>
-          <li><span class="help-ico">💎</span> <span><strong>2× Points</strong><em>Doubles scoring for 10s</em></span></li>
-          <li><span class="help-ico">👻</span> <span><strong>Ghost</strong><em>Phase through pillars for 5s</em></span></li>
+          <li><span class="help-ico" style="color:#ffb703"><i class="fa-solid fa-star" aria-hidden="true"></i></span> <span><strong>Golden Feather</strong><em>+5 points instantly</em></span></li>
+          <li><span class="help-ico" style="color:#00f2fe"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span> <span><strong>Shield</strong><em>Absorbs one crash</em></span></li>
+          <li><span class="help-ico" style="color:#a855f7"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></span> <span><strong>Slow-Mo</strong><em>Slows the world for 6s</em></span></li>
+          <li><span class="help-ico" style="color:#f43f5e"><i class="fa-solid fa-magnet" aria-hidden="true"></i></span> <span><strong>Magnet</strong><em>Pulls pickups to you for 8s</em></span></li>
+          <li><span class="help-ico" style="color:#22d3ee"><i class="fa-solid fa-gem" aria-hidden="true"></i></span> <span><strong>2× Points</strong><em>Doubles scoring for 10s</em></span></li>
+          <li><span class="help-ico" style="color:#e2e8f0"><i class="fa-solid fa-ghost" aria-hidden="true"></i></span> <span><strong>Ghost</strong><em>Phase through pillars for 5s</em></span></li>
         </ul>
 
         <div class="help-divider"></div>
@@ -516,7 +518,7 @@
          ACHIEVEMENT TOAST
          ================================================================ -->
     <div class="achievement-toast" id="achievement-toast" role="status" aria-live="polite">
-      <div class="achievement-icon" id="achievement-icon" aria-hidden="true">🏆</div>
+      <div class="achievement-icon" id="achievement-icon" aria-hidden="true"><i class="fa-solid fa-trophy"></i></div>
       <div class="achievement-details">
         <div class="achievement-title" id="achievement-title">Achievement Unlocked!</div>
         <div class="achievement-desc"  id="achievement-desc">Keep flying!</div>

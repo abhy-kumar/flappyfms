@@ -140,16 +140,16 @@
         const s = d.state;
         document.body.dataset.gameState = s;
         pauseBtn.disabled = !(s === 'PLAYING' || s === 'PAUSED' || s === 'COUNTDOWN');
-        pauseBtn.textContent = s === 'PAUSED' ? '▶' : '⏸';
+        pauseBtn.innerHTML = s === 'PAUSED' ? '<i class="fa-solid fa-play" aria-hidden="true"></i>' : '<i class="fa-solid fa-pause" aria-hidden="true"></i>';
         pauseBtn.setAttribute('aria-label', s === 'PAUSED' ? 'Resume game' : 'Pause game');
         if (s !== 'READY') hideTapHint();
       },
 
       powerups(d) { renderPills(d); },
 
-      achievement(d) { queueToast(d.icon || '🏆', d.title, d.desc); },
+      achievement(d) { queueToast(d.icon || '<i class="fa-solid fa-trophy"></i>', d.title, d.desc); },
 
-      record() { queueToast('🥇', 'NEW RECORD!', 'You just beat your personal best'); },
+      record() { queueToast('<i class="fa-solid fa-ranking-star"></i>', 'NEW RECORD!', 'You just beat your personal best'); },
 
       mode(d) {
         modeChip.textContent = d.label;
@@ -264,11 +264,11 @@
     function hideTapHint() { tapHint.classList.remove('visible'); }
 
     const PILL_META = {
-      shield: { icon: '🛡️', label: 'SHIELD' },
-      slowmo: { icon: '⏳', label: 'SLOW-MO' },
-      magnet: { icon: '🧲', label: 'MAGNET' },
-      double: { icon: '💎', label: '2× POINTS' },
-      ghost:  { icon: '👻', label: 'GHOST' }
+      shield: { icon: '<i class="fa-solid fa-shield-halved"></i>', label: 'SHIELD' },
+      slowmo: { icon: '<i class="fa-solid fa-hourglass-half"></i>', label: 'SLOW-MO' },
+      magnet: { icon: '<i class="fa-solid fa-magnet"></i>',        label: 'MAGNET' },
+      double: { icon: '<i class="fa-solid fa-gem"></i>',           label: '2× POINTS' },
+      ghost:  { icon: '<i class="fa-solid fa-ghost"></i>',         label: 'GHOST' }
     };
 
     // Pills are built once and updated by event, replacing the old
@@ -317,7 +317,7 @@
       const item = toastQueue.shift();
       if (!item) { toastBusy = false; return; }
       toastBusy = true;
-      toastIcon.textContent = item.icon;
+      toastIcon.innerHTML = item.icon;
       toastTitle.textContent = item.title;
       toastDesc.textContent = item.desc;
       toast.classList.add('show');
@@ -332,10 +332,10 @@
     /* ------------------------------------------------------------------ */
 
     const MEDAL_META = {
-      bronze:   { icon: '🥉', label: 'BRONZE' },
-      silver:   { icon: '🥈', label: 'SILVER' },
-      gold:     { icon: '🥇', label: 'GOLD' },
-      platinum: { icon: '💎', label: 'PLATINUM' }
+      bronze:   { icon: '<i class="fa-solid fa-medal" style="color:#cd7f32"></i>', label: 'BRONZE' },
+      silver:   { icon: '<i class="fa-solid fa-medal" style="color:#c0c0c0"></i>', label: 'SILVER' },
+      gold:     { icon: '<i class="fa-solid fa-medal" style="color:#ffd700"></i>', label: 'GOLD' },
+      platinum: { icon: '<i class="fa-solid fa-gem"   style="color:#e2e8f0"></i>', label: 'PLATINUM' }
     };
 
     let lastResult = null;
@@ -354,12 +354,12 @@
       if (d.medal) {
         const m = MEDAL_META[d.medal];
         medalWrap.className = 'medal-wrap visible ' + d.medal;
-        $('medal-icon').textContent = m.icon;
+        $('medal-icon').innerHTML = m.icon;
         $('medal-label').textContent = m.label + ' MEDAL';
         $('medal-next').textContent = nextMedalText(d);
       } else {
         medalWrap.className = 'medal-wrap visible none';
-        $('medal-icon').textContent = '🪶';
+        $('medal-icon').innerHTML = '<i class="fa-solid fa-feather" style="color:#94a3b8"></i>';
         $('medal-label').textContent = 'NO MEDAL';
         $('medal-next').textContent = nextMedalText(d);
       }
@@ -391,7 +391,7 @@
           await navigator.share({ title: 'Flappy FMS', text });
         } else {
           await navigator.clipboard.writeText(text);
-          queueToast('📋', 'Copied!', 'Score copied to your clipboard');
+          queueToast('<i class="fa-solid fa-clipboard-check"></i>', 'Copied!', 'Score copied to your clipboard');
         }
       } catch (e) { /* user cancelled the share sheet */ }
     });
@@ -447,7 +447,7 @@
         const li = document.createElement('li');
         li.className = 'achievement-row' + (got ? ' unlocked' : ' locked');
         li.innerHTML =
-          `<span class="ach-icon" aria-hidden="true">${got ? a.icon : '🔒'}</span>` +
+          `<span class="ach-icon" aria-hidden="true">${got ? a.icon : '<i class="fa-solid fa-lock"></i>'}</span>` +
           `<span class="ach-text"><strong>${a.title}</strong><em>${a.desc}</em></span>`;
         list.appendChild(li);
       });
@@ -469,7 +469,7 @@
       shakeInput.checked = Settings.get('shake');
       motionInput.checked = Settings.get('reducedMotion');
       document.body.classList.toggle('reduced-motion', Settings.get('reducedMotion'));
-      soundBtn.textContent = sounds.muted ? '🔇' : '🔊';
+      soundBtn.innerHTML = sounds.muted ? '<i class="fa-solid fa-volume-xmark" aria-hidden="true"></i>' : '<i class="fa-solid fa-volume-high" aria-hidden="true"></i>';
       soundBtn.setAttribute('aria-pressed', sounds.muted ? 'true' : 'false');
       soundBtn.setAttribute('aria-label', sounds.muted ? 'Unmute sound' : 'Mute sound');
     }
@@ -497,7 +497,7 @@
       renderModeCards();
       renderAchievements();
       resetConfirmTimeout();
-      queueToast('🧹', 'Progress cleared', 'Scores, stats and achievements reset');
+      queueToast('<i class="fa-solid fa-trash-can"></i>', 'Progress cleared', 'Scores, stats and achievements reset');
     });
     let confirmed = false;
     function resetConfirmTimeout() { confirmed = false; $('reset-data').textContent = 'RESET ALL PROGRESS'; }
