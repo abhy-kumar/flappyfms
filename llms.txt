@@ -1,6 +1,6 @@
 # Flappy FMS
 
-> Flappy FMS is a free online arcade flight game created for the Faculty of Management Studies (FMS) community and gamers worldwide. Players soar as a red eagle through glowing neon pillars across three game modes, using six collectible power-ups, competing on the FMS Campus Leaderboard, and unlocking 28 achievements. Play instantly in any web browser without ads, downloads, or account registration, or install as a Progressive Web App (PWA) for 100% offline gameplay.
+> Flappy FMS is a free online arcade flight game created for the Faculty of Management Studies (FMS) community and gamers worldwide. Players soar as a red eagle through glowing neon pillars across three game modes, using six collectible power-ups, competing on the FMS Campus Leaderboard, and unlocking 43 achievements. Play instantly in any web browser without ads, downloads, or account registration, or install as a Progressive Web App (PWA) for 100% offline gameplay.
 
 ## Project Summary
 
@@ -38,11 +38,11 @@
 - Clearing consecutive pillars without hitting obstacles builds a score combo multiplier up to 5× (increments every 5 consecutive pipes).
 - Skimming tightly through gaps (<20px clearance) triggers "Close Call" / "Near Miss" bonus points.
 
-### 5. 28 Achievements & Awards
-- Score milestone badges (First Flight, Eagle Eyes, Storm Rider, Legend of FMS, Sky Immortal).
-- Streak and precision awards (Daredevil, Precision Ace, Solar Flare).
-- Power-up mastery awards (Sky Arsenal, Purist, Ghost Walk, Bounced).
-- Mode mastery and dedication trophies (Classic Ace, Iron Wings, Zen Master, Campus Legend).
+### 5. 43 Achievements & Awards
+- Score milestone badges up to 1,500 points (First Flight, Flight Cadet, Bronze Aviator, Silver Wings, Double Century, Sky Sovereign, Legend of FMS, Sky Immortal, Cosmic Ascendant, Apex Predator).
+- Streak and precision awards (Spark, Heating Up, Unbroken Flow, Solar Flare, Hyper Drive, Singularity, Daredevil, Precision Ace, Ghostwire Master).
+- Power-up mastery awards (Sky Arsenal, Purist Aviator, Ghost Walk, Bounced, Aegis Sentinel).
+- Mode mastery and dedication trophies (Classic Veteran, Classic Titan, Hardcore Survivor, Iron Wings, Hardcore God, Zen Wanderer, Zen Enlightenment, Zen Transcendence, Campus Legend).
 
 ## Technical Architecture
 

@@ -9,7 +9,7 @@
 4. Flight Dynamics & Physics Specification
 5. Power-Up System Specification
 6. Campus Leaderboard & Data Persistence
-7. Complete 28 Achievement List & Criteria
+7. Complete 43 Achievement List & Criteria
 8. Procedural Web Audio Engine
 9. Progressive Web App (PWA) Implementation
 10. SEO, Schema Graph & Accessibility Compliance
@@ -74,35 +74,50 @@ Power-ups spawn inside pillar gaps with procedural rarity:
 
 ---
 
-## 7. Complete 28 Achievement List & Criteria
-1. `first_flight`: Score 5 points in any mode
-2. `eagle_eyes`: Score 10 points
-3. `silver_wings`: Score 15 points
-4. `storm_rider`: Score 25 points
-5. `cloud_runner`: Score 35 points
-6. `sky_sovereign`: Score 50 points
-7. `century_club`: Score 75 points
-8. `legend_of_fms`: Score 100 points
-9. `sky_immortal`: Score 150 points
-10. `spark`: Reach 5× combo streak
-11. `heating_up`: Reach 10× combo streak
-12. `unbroken`: Reach 25× combo streak
-13. `solar_flare`: Reach 40× combo streak
-14. `razor_edge`: Perform 1 close call
-15. `daredevil`: Perform 5 close calls in a single run
-16. `precision_ace`: Perform 10 close calls in a single run
-17. `first_pickup`: Collect 1 power-up
-18. `collector`: Collect 5 power-ups in a run
-19. `sky_arsenal`: Collect 10 power-ups in a run
-20. `purist`: Score 20 points without collecting any power-ups
-21. `bounced`: Survive a lethal crash using Shield Orb
-22. `ghost_walk`: Phase through a pillar during Ghost mode
-23. `classic_ace`: Score 40+ points in Classic Mode
-24. `iron_wings`: Score 20+ points in Hardcore Mode
-25. `zen_master`: Score 50+ points in Zen Mode
-26. `well_travelled`: Play all three game modes
-27. `campus_legend`: Enter the FMS Campus Leaderboard Top 10
-28. `frequent_flyer`: Complete 10 total flight runs
+## 7. Complete 43 Achievement List & Criteria
+1. `first_flight`: Score 10 points in a single run
+2. `cadet`: Score 25 points in a single run
+3. `bronze_aviator`: Score 50 points in a single run
+4. `silver_wings`: Score 100 points in a single run
+5. `century_club`: Score 200 points in a single run
+6. `sky_sovereign`: Score 350 points in a single run
+7. `legend`: Score 500 points in a single run (Legend of FMS)
+8. `immortal`: Score 750 points in a single run (Sky Immortal)
+9. `cosmic_ascendant`: Score 1,000 points in a single run
+10. `apex_predator`: Score 1,500 points in a single run
+11. `combo_5`: Reach a 5-pillar combo
+12. `combo_15`: Reach a 15-pillar combo
+13. `combo_30`: Reach a 30-pillar combo
+14. `combo_60`: Reach a 60-pillar combo
+15. `combo_100`: Reach a 100-pillar combo
+16. `combo_150`: Reach a 150-pillar combo
+17. `close_call`: Execute 1 close call near a pillar
+18. `daredevil`: Execute 5 close calls in a single run
+19. `edge_master`: Execute 15 close calls in a single run
+20. `ghost_wire`: Execute 30 close calls in a single run
+21. `classic_veteran`: Score 150+ in Classic Mode
+22. `classic_titan`: Score 400+ in Classic Mode
+23. `hardcore_survivor`: Score 30+ in Hardcore Mode
+24. `iron_wings`: Score 75+ in Hardcore Mode
+25. `hardcore_god`: Score 150+ in Hardcore Mode
+26. `zen_wanderer`: Score 200+ in Zen Mode
+27. `zen_enlightenment`: Score 500+ in Zen Mode
+28. `zen_transcendence`: Score 1,000+ in Zen Mode
+29. `all_modes`: Set a score in all 3 game modes
+30. `first_pickup`: Collect your first power-up
+31. `collector`: Collect 10 power-ups in one run
+32. `arsenal`: Collect 25 power-ups in one run
+33. `purist`: Score 50 points without collecting any power-ups
+34. `shielded`: Survive a lethal crash with a Shield
+35. `iron_shield`: Survive 3 shield saves in one run
+36. `ghost_walk`: Phase straight through 5 pillars in one run
+37. `top_pilot`: Enter the FMS Campus Leaderboard Top 10
+38. `frequent_flyer`: Complete 20 total flight runs
+39. `persistent`: Complete 50 total flight runs
+40. `veteran_pilot`: Complete 150 total runs
+41. `marathon`: Fly 25,000m total distance
+42. `sky_nomad`: Fly 75,000m total distance
+43. `orbital_voyager`: Fly 200,000m total distance
 
 ---
 

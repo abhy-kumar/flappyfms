@@ -75,27 +75,111 @@ const MAX_MULT     = 5;
 function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
 function lerp(a, b, t) { return a + (b - a) * t; }
 
-function hexToRgb(hex) {
-  const h = hex.replace('#', '');
-  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
-}
-function mixHex(a, b, t) {
-  const A = hexToRgb(a), B = hexToRgb(b);
-  return `rgb(${Math.round(lerp(A[0], B[0], t))},${Math.round(lerp(A[1], B[1], t))},${Math.round(lerp(A[2], B[2], t))})`;
+function parseColor(str) {
+  if (!str) return [255, 255, 255, 1.0];
+  if (str.startsWith('#')) {
+    const h = str.replace('#', '');
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return [isNaN(r) ? 255 : r, isNaN(g) ? 255 : g, isNaN(b) ? 255 : b, 1.0];
+  }
+  const match = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+  if (match) {
+    return [
+      parseInt(match[1], 10),
+      parseInt(match[2], 10),
+      parseInt(match[3], 10),
+      match[4] !== undefined ? parseFloat(match[4]) : 1.0
+    ];
+  }
+  return [255, 255, 255, 1.0];
 }
 
-/* Sky palettes — 5 progressive atmospheric stages smoothly interpolated by score */
+function mixColor(c1, c2, t) {
+  const a = parseColor(c1), b = parseColor(c2);
+  const r = Math.round(lerp(a[0], b[0], t));
+  const g = Math.round(lerp(a[1], b[1], t));
+  const bl = Math.round(lerp(a[2], b[2], t));
+  const alpha = lerp(a[3], b[3], t);
+  if (alpha >= 0.999) return `rgb(${r},${g},${bl})`;
+  return `rgba(${r},${g},${bl},${alpha.toFixed(3)})`;
+}
+
+/* Sky palettes — 6 progressive atmospheric stages smoothly interpolated across high scores */
 const SKIES = [
-  // 1. Stage 0 (0-15): Deep Night Sky with Cyan Neon Horizon & Silver Moon
-  { at: 0,   top: '#050814', mid: '#0c1626', bot: '#15243b', star: 0.95, hillFar: '#091120', hillMid: '#101d33', moonColor: '#f1f5f9', moonGlow: 'rgba(0, 242, 254, 0.28)', aurora: 'rgba(0, 242, 254, 0.08)' },
-  // 2. Stage 15 (15-35): Cyber Crimson Dusk & Amber Sunset
-  { at: 15,  top: '#180309', mid: '#380e1a', bot: '#5c1724', star: 0.70, hillFar: '#20070f', hillMid: '#350e1b', moonColor: '#ffe8d6', moonGlow: 'rgba(255, 143, 0, 0.35)', aurora: 'rgba(255, 90, 120, 0.12)' },
-  // 3. Stage 35 (35-65): Cyberpunk Neon Violet & Magenta
-  { at: 35,  top: '#0c031a', mid: '#220938', bot: '#421154', star: 0.85, hillFar: '#160628', hillMid: '#2a0e44', moonColor: '#f3e8ff', moonGlow: 'rgba(168, 85, 247, 0.35)', aurora: 'rgba(217, 70, 239, 0.15)' },
-  // 4. Stage 65 (65-100): Deep Cosmos & Emerald Northern Lights
-  { at: 65,  top: '#020b12', mid: '#041c22', bot: '#083236', star: 1.00, hillFar: '#031318', hillMid: '#06242b', moonColor: '#d1fae5', moonGlow: 'rgba(16, 185, 129, 0.35)', aurora: 'rgba(52, 211, 153, 0.20)' },
-  // 5. Stage 100+: Celestial Golden Starlight & Solar Corona
-  { at: 100, top: '#030209', mid: '#120720', bot: '#280d36', star: 1.00, hillFar: '#090316', hillMid: '#1a0930', moonColor: '#fef3c7', moonGlow: 'rgba(255, 215, 0, 0.45)', aurora: 'rgba(251, 191, 36, 0.25)' }
+  // 1. Stage 0 (0-50): Deep Cyber Midnight (rich indigo, cyan horizon, silver moon)
+  {
+    at: 0,
+    top: '#050814', mid: '#0c1626', bot: '#15243b',
+    star: 0.95,
+    mountainFar: '#08101e',
+    skylineMid: '#0e1a2f',
+    hillNear: '#12233f',
+    moonColor: '#f1f5f9',
+    moonGlow: 'rgba(0, 242, 254, 0.30)',
+    aurora: 'rgba(0, 242, 254, 0.10)'
+  },
+  // 2. Stage 50 (50-150): Cyber Dusk & Crimson Twilight (amber/wine sunset, warm solar glow)
+  {
+    at: 50,
+    top: '#180309', mid: '#380e1a', bot: '#5c1724',
+    star: 0.70,
+    mountainFar: '#1c050c',
+    skylineMid: '#2d0a15',
+    hillNear: '#420f1e',
+    moonColor: '#ffe8d6',
+    moonGlow: 'rgba(255, 143, 0, 0.35)',
+    aurora: 'rgba(255, 90, 120, 0.14)'
+  },
+  // 3. Stage 150 (150-350): Synthwave Neon Violet & Electric Magenta
+  {
+    at: 150,
+    top: '#0c031c', mid: '#220938', bot: '#4a1058',
+    star: 0.85,
+    mountainFar: '#120422',
+    skylineMid: '#200835',
+    hillNear: '#320d4f',
+    moonColor: '#f3e8ff',
+    moonGlow: 'rgba(168, 85, 247, 0.40)',
+    aurora: 'rgba(217, 70, 239, 0.18)'
+  },
+  // 4. Stage 350 (350-650): Deep Nebula Emerald & Northern Lights
+  {
+    at: 350,
+    top: '#020d14', mid: '#041e24', bot: '#083a3f',
+    star: 1.00,
+    mountainFar: '#031217',
+    skylineMid: '#062228',
+    hillNear: '#0a3239',
+    moonColor: '#d1fae5',
+    moonGlow: 'rgba(16, 185, 129, 0.40)',
+    aurora: 'rgba(52, 211, 153, 0.22)'
+  },
+  // 5. Stage 650 (650-1000): Solar Eclipse & Golden Starlight
+  {
+    at: 650,
+    top: '#080410', mid: '#1c0e05', bot: '#3a1f06',
+    star: 1.00,
+    mountainFar: '#100703',
+    skylineMid: '#200e05',
+    hillNear: '#321708',
+    moonColor: '#fef3c7',
+    moonGlow: 'rgba(255, 215, 0, 0.50)',
+    aurora: 'rgba(251, 191, 36, 0.28)'
+  },
+  // 6. Stage 1000+ (1000+): Cosmic Ascendant & Hyperdrive Violet-Gold
+  {
+    at: 1000,
+    top: '#020208', mid: '#0f0822', bot: '#281144',
+    star: 1.00,
+    mountainFar: '#0a0518',
+    skylineMid: '#180c30',
+    hillNear: '#261248',
+    moonColor: '#ffffff',
+    moonGlow: 'rgba(0, 242, 254, 0.60)',
+    aurora: 'rgba(168, 85, 247, 0.35)'
+  }
 ];
 
 /* ========================================================================== */
@@ -131,7 +215,16 @@ class FlappyGame {
     this.popups = [];
     this.bgStars = [];
     this.clouds = [];
-    this.hills = [];
+    this.ambientMotes = [];
+    this.shootingStars = [];
+
+    // Continuous smooth parallax scroll accumulators (never snap on speed changes)
+    this.scrollFar = 0;
+    this.scrollMid = 0;
+    this.scrollNear = 0;
+    this.scrollGround = 0;
+    this.auroraPhase = 0;
+    this.smoothedScore = 0;
 
     this.active = {};              // powerup -> steps remaining (shield = Infinity)
     this.resetRunState();
@@ -221,22 +314,29 @@ class FlappyGame {
     if (this.state === 'MENU' || this.state === 'READY') this.bird.y = h * 0.45;
     this.bird.y = clamp(this.bird.y, this.bird.radius, this.groundY - this.bird.radius);
 
-    this.initBackgroundElements();
+    this.initBackgroundElements(sx, sy);
   }
 
-  initBackgroundElements() {
+  initBackgroundElements(sx = 1, sy = 1) {
     const reduced = Settings.get('reducedMotion');
-    const starCount = reduced ? 35 : 70;
-    const starColors = ['#ffffff', '#e0f2fe', '#fef3c7', '#fed7aa'];
+    const starCount = reduced ? 40 : 80;
+    const starColors = ['#ffffff', '#e0f2fe', '#fef3c7', '#fed7aa', '#c7d2fe'];
+
+    if (this.bgStars.length > 0 && sx !== 1) {
+      this.bgStars.forEach(s => { s.x *= sx; s.y *= sy; });
+      this.clouds.forEach(c => { c.x *= sx; c.y *= sy; });
+      if (this.ambientMotes) this.ambientMotes.forEach(m => { m.x *= sx; m.y *= sy; });
+      return;
+    }
 
     this.bgStars = [];
     for (let i = 0; i < starCount; i++) {
       this.bgStars.push({
-        x: Math.random() * this.width,
-        y: Math.random() * this.height * 0.72,
+        x: Math.random() * (this.width || 400),
+        y: Math.random() * ((this.height || 600) * 0.72),
         size: Math.random() * 2.2 + 0.6,
         alpha: Math.random() * 0.7 + 0.3,
-        depth: Math.random() * 0.28 + 0.04,
+        depth: Math.random() * 0.28 + 0.05,
         phase: Math.random() * Math.PI * 2,
         color: starColors[Math.floor(Math.random() * starColors.length)]
       });
@@ -247,43 +347,22 @@ class FlappyGame {
     this.clouds = [];
     for (let i = 0; i < 7; i++) {
       this.clouds.push({
-        x: Math.random() * this.width,
-        y: Math.random() * (this.height * 0.44) + 25,
-        speed: Math.random() * 0.4 + 0.18,
+        x: Math.random() * (this.width || 400),
+        y: Math.random() * ((this.height || 600) * 0.42) + 25,
+        speed: Math.random() * 0.35 + 0.15,
         scale: Math.random() * 0.65 + 0.55
       });
     }
 
-    // Layer 1: Distant jagged mountain skyline (0.12x parallax)
-    this.farMountains = [];
-    const farSegments = Math.ceil(this.width / 140) + 4;
-    for (let i = 0; i < farSegments; i++) {
-      this.farMountains.push({
-        x: i * 140,
-        h: Math.random() * this.height * 0.22 + this.height * 0.12
-      });
-    }
-
-    // Layer 2: Midground rolling hills (0.28x parallax)
-    this.hills = [];
-    const midSegments = Math.ceil(this.width / 90) + 4;
-    for (let i = 0; i < midSegments; i++) {
-      this.hills.push({
-        x: i * 90,
-        h: Math.random() * this.height * 0.14 + this.height * 0.05
-      });
-    }
-
-    // Layer 3: Floating ambient cyber motes / glowing embers
     this.ambientMotes = [];
     if (!reduced) {
-      const moteColors = ['#00f2fe', '#ffd700', '#f43f5e', '#a855f7', '#ffffff'];
-      for (let i = 0; i < 22; i++) {
+      const moteColors = ['#00f2fe', '#ffd700', '#f43f5e', '#a855f7', '#38bdf8'];
+      for (let i = 0; i < 24; i++) {
         this.ambientMotes.push({
-          x: Math.random() * this.width,
-          y: Math.random() * this.height,
-          vx: Math.random() * 0.4 + 0.2,
-          vy: Math.random() * 0.35 + 0.1,
+          x: Math.random() * (this.width || 400),
+          y: Math.random() * (this.height || 600),
+          vx: Math.random() * 0.35 + 0.15,
+          vy: Math.random() * 0.3 + 0.1,
           size: Math.random() * 2 + 1,
           alpha: Math.random() * 0.6 + 0.2,
           phase: Math.random() * Math.PI * 2,
@@ -475,6 +554,54 @@ class FlappyGame {
   }
 
   /* ---------------------------------------------------------------------- */
+  /*  BACKGROUND SIMULATION                                                  */
+  /* ---------------------------------------------------------------------- */
+
+  updateBackground() {
+    if (this.state === 'PAUSED') return;
+
+    // Exponentially smoothed score prevents any color pops or discrete jumps
+    this.smoothedScore += (this.score - this.smoothedScore) * 0.035;
+
+    const moving = (this.state === 'PLAYING');
+    const baseSpeed = moving ? this.pipeSpeed * this.speedMult : 0.8;
+
+    this.scrollFar += baseSpeed * 0.08;
+    this.scrollMid += baseSpeed * 0.22;
+    this.scrollNear += baseSpeed * 0.50;
+    this.scrollGround += baseSpeed;
+    this.auroraPhase += 0.012;
+
+    const w = this.width || 400;
+    const h = this.height || 600;
+
+    // Smooth starfield wrapping without jumping Y
+    this.bgStars.forEach(s => {
+      s.x -= baseSpeed * s.depth;
+      if (s.x < -10) s.x += w + 20;
+    });
+
+    // Smooth volumetric cloud drifting
+    this.clouds.forEach(c => {
+      c.x -= c.speed * baseSpeed;
+      if (c.x < -140 * c.scale) {
+        c.x = w + 40;
+        c.y = Math.random() * (h * 0.42) + 25;
+      }
+    });
+
+    // Smooth ambient motes
+    if (!Settings.get('reducedMotion')) {
+      this.ambientMotes.forEach(m => {
+        m.x -= m.vx * (moving ? this.speedMult : 0.35);
+        m.y -= m.vy;
+        if (m.x < -10) m.x = w + 10;
+        if (m.y < -10) m.y = this.groundY;
+      });
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
   /*  SIMULATION — one fixed 60 Hz step                                      */
   /* ---------------------------------------------------------------------- */
 
@@ -482,14 +609,9 @@ class FlappyGame {
     this.frameCount++;
 
     if (this.shakeFrames > 0) this.shakeFrames--;
-    if (this.flash > 0) this.flash = Math.max(0, this.flash - 0.06);
+    if (this.flash > 0) this.flash = Math.max(0, this.flash - 0.05);
 
-    // Ambient motion continues on menus so the scene never looks frozen.
-    const bgMult = (this.state === 'PAUSED') ? 0 : this.speedMult;
-    this.clouds.forEach(c => {
-      c.x -= c.speed * bgMult;
-      if (c.x < -120) { c.x = this.width + 60; c.y = Math.random() * (this.height * 0.45) + 40; }
-    });
+    this.updateBackground();
 
     if (this.state === 'PAUSED') return;
 
@@ -601,12 +723,12 @@ class FlappyGame {
           this.pipes.splice(i, 1);
           sounds.playShieldBreak();
           this.haptic([15, 40, 15]);
-          this.shake(14);
-          this.flash = 0.5;
-          this.hitStop = 5;
-          this.createExplosion(this.bird.x, this.bird.y, POWERUPS.shield.color, 26);
+          this.shake(8);
+          this.hitStop = 4;
+          this.createExplosion(this.bird.x, this.bird.y, POWERUPS.shield.color, 28);
           this.addPopup(this.bird.x, this.bird.y - 40, 'SHIELD SAVE!', POWERUPS.shield.color);
           this.unlock('shielded');
+          if (this.shieldSaves >= 3) this.unlock('iron_shield');
           this.emit('powerups', this.powerupSnapshot());
           this.pushScore();
           continue;
@@ -993,41 +1115,60 @@ class FlappyGame {
     this.emit('achievement', { id, title: def.title, desc: def.desc, icon: def.icon });
   }
 
-  /* Score-threshold checks use >= ranges, not exact equality. */
+  /* Score-threshold checks use >= ranges scaling up to high scores (1500+). */
   checkRunAchievements() {
-    if (this.score >= 5)   this.unlock('first_flight');
-    if (this.score >= 10)  this.unlock('eagle_eyes');
-    if (this.score >= 15)  this.unlock('silver_wings');
-    if (this.score >= 25)  this.unlock('storm_rider');
-    if (this.score >= 35)  this.unlock('cloud_runner');
-    if (this.score >= 50)  this.unlock('sky_sovereign');
-    if (this.score >= 75)  this.unlock('century_club');
-    if (this.score >= 100) this.unlock('legend');
-    if (this.score >= 150) this.unlock('immortal');
+    if (this.score >= 10)   this.unlock('first_flight');
+    if (this.score >= 25)   this.unlock('cadet');
+    if (this.score >= 50)   this.unlock('bronze_aviator');
+    if (this.score >= 100)  this.unlock('silver_wings');
+    if (this.score >= 200)  this.unlock('century_club');
+    if (this.score >= 350)  this.unlock('sky_sovereign');
+    if (this.score >= 500)  this.unlock('legend');
+    if (this.score >= 750)  this.unlock('immortal');
+    if (this.score >= 1000) this.unlock('cosmic_ascendant');
+    if (this.score >= 1500) this.unlock('apex_predator');
 
-    if (this.combo >= 5)  this.unlock('combo_5');
-    if (this.combo >= 10) this.unlock('combo_10');
-    if (this.combo >= 25) this.unlock('combo_25');
-    if (this.combo >= 40) this.unlock('combo_40');
+    if (this.combo >= 5)   this.unlock('combo_5');
+    if (this.combo >= 15)  this.unlock('combo_15');
+    if (this.combo >= 30)  this.unlock('combo_30');
+    if (this.combo >= 60)  this.unlock('combo_60');
+    if (this.combo >= 100) this.unlock('combo_100');
+    if (this.combo >= 150) this.unlock('combo_150');
 
     if (this.nearMisses >= 1)  this.unlock('close_call');
     if (this.nearMisses >= 5)  this.unlock('daredevil');
-    if (this.nearMisses >= 10) this.unlock('edge_master');
+    if (this.nearMisses >= 15) this.unlock('edge_master');
+    if (this.nearMisses >= 30) this.unlock('ghost_wire');
 
-    if (this.mode === 'hardcore' && this.score >= 20) this.unlock('hardcore_20');
-    if (this.mode === 'zen' && this.score >= 50)      this.unlock('zen_master');
-    if (this.mode === 'classic' && this.score >= 40)  this.unlock('classic_ace');
+    if (this.mode === 'classic') {
+      if (this.score >= 150) this.unlock('classic_veteran');
+      if (this.score >= 400) this.unlock('classic_titan');
+    } else if (this.mode === 'hardcore') {
+      if (this.score >= 30)  this.unlock('hardcore_survivor');
+      if (this.score >= 75)  this.unlock('iron_wings');
+      if (this.score >= 150) this.unlock('hardcore_god');
+    } else if (this.mode === 'zen') {
+      if (this.score >= 200)  this.unlock('zen_wanderer');
+      if (this.score >= 500)  this.unlock('zen_enlightenment');
+      if (this.score >= 1000) this.unlock('zen_transcendence');
+    }
 
-    if (this.score >= 20 && this.powerupsCollected === 0) this.unlock('purist');
-    if (this.ghostPasses >= 1) this.unlock('ghost_walk');
+    if (this.powerupsCollected >= 1)  this.unlock('first_pickup');
+    if (this.powerupsCollected >= 10) this.unlock('collector');
+    if (this.powerupsCollected >= 25) this.unlock('arsenal');
+    if (this.score >= 50 && this.powerupsCollected === 0) this.unlock('purist');
+    if (this.shieldSaves >= 1) this.unlock('shielded');
+    if (this.shieldSaves >= 3) this.unlock('iron_shield');
+    if (this.ghostPasses >= 5) this.unlock('ghost_walk');
   }
 
   checkLifetimeAchievements(stats) {
-    if (stats.games >= 10) this.unlock('frequent_flyer');
-    if (stats.games >= 25) this.unlock('persistent');
-    if (stats.games >= 100) this.unlock('veteran_pilot');
-    if (stats.totalDistance >= 10000) this.unlock('marathon');
-    if (stats.totalDistance >= 25000) this.unlock('sky_nomad');
+    if (stats.games >= 20) this.unlock('frequent_flyer');
+    if (stats.games >= 50) this.unlock('persistent');
+    if (stats.games >= 150) this.unlock('veteran_pilot');
+    if (stats.totalDistance >= 25000) this.unlock('marathon');
+    if (stats.totalDistance >= 75000) this.unlock('sky_nomad');
+    if (stats.totalDistance >= 200000) this.unlock('orbital_voyager');
     const bests = this.bests;
     if (bests.classic > 0 && bests.hardcore > 0 && bests.zen > 0) this.unlock('all_modes');
   }
@@ -1057,7 +1198,7 @@ class FlappyGame {
     ctx.restore();
 
     if (this.flash > 0) {
-      ctx.fillStyle = `rgba(255,90,90,${this.flash * 0.45})`;
+      ctx.fillStyle = `rgba(255,60,60,${this.flash * 0.40})`;
       ctx.fillRect(0, 0, this.width, this.height);
     }
 
@@ -1066,7 +1207,7 @@ class FlappyGame {
   }
 
   skyColors() {
-    const s = this.score;
+    const s = Math.max(0, this.smoothedScore || 0);
     let a = SKIES[0], b = SKIES[1];
     for (let i = 0; i < SKIES.length - 1; i++) {
       if (s >= SKIES[i].at) { a = SKIES[i]; b = SKIES[i + 1]; }
@@ -1074,15 +1215,17 @@ class FlappyGame {
     if (s >= SKIES[SKIES.length - 1].at) { a = b = SKIES[SKIES.length - 1]; }
     const span = (b.at - a.at) || 1;
     const t = clamp((s - a.at) / span, 0, 1);
+
     return {
-      top: mixHex(a.top, b.top, t),
-      mid: mixHex(a.mid, b.mid, t),
-      bot: mixHex(a.bot, b.bot, t),
-      hillFar: mixHex(a.hillFar, b.hillFar, t),
-      hillMid: mixHex(a.hillMid, b.hillMid, t),
-      moonColor: b.moonColor || '#ffffff',
-      moonGlow: b.moonGlow || 'rgba(0, 242, 254, 0.25)',
-      aurora: b.aurora || 'rgba(0, 242, 254, 0.08)',
+      top: mixColor(a.top, b.top, t),
+      mid: mixColor(a.mid, b.mid, t),
+      bot: mixColor(a.bot, b.bot, t),
+      mountainFar: mixColor(a.mountainFar, b.mountainFar, t),
+      skylineMid: mixColor(a.skylineMid, b.skylineMid, t),
+      hillNear: mixColor(a.hillNear, b.hillNear, t),
+      moonColor: mixColor(a.moonColor, b.moonColor, t),
+      moonGlow: mixColor(a.moonGlow, b.moonGlow, t),
+      aurora: mixColor(a.aurora, b.aurora, t),
       star: lerp(a.star, b.star, t)
     };
   }
@@ -1091,45 +1234,47 @@ class FlappyGame {
     const ctx = this.ctx;
     const c = this.skyColors();
     const reduced = Settings.get('reducedMotion');
+    const w = this.width;
+    const h = this.height;
 
     // 1. Deep Atmospheric Gradient Sky
-    const sky = ctx.createLinearGradient(0, 0, 0, this.height);
+    const sky = ctx.createLinearGradient(0, 0, 0, h);
     sky.addColorStop(0, c.top);
     sky.addColorStop(0.55, c.mid);
     sky.addColorStop(1, c.bot);
     ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, this.width, this.height);
+    ctx.fillRect(0, 0, w, h);
 
-    // 2. Aurora Ribbon Shimmer
+    // 2. Fluid Aurora Ribbon Shimmer
     if (!reduced) {
       ctx.save();
-      const wave = Math.sin(this.frameCount * 0.015) * 15;
-      const auroraGrad = ctx.createLinearGradient(0, 0, this.width, this.height * 0.45);
+      const wave1 = Math.sin(this.auroraPhase) * 16;
+      const wave2 = Math.cos(this.auroraPhase * 0.8) * 12;
+      const auroraGrad = ctx.createLinearGradient(0, 0, w, h * 0.45);
       auroraGrad.addColorStop(0, 'rgba(0,0,0,0)');
       auroraGrad.addColorStop(0.5, c.aurora);
       auroraGrad.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = auroraGrad;
       ctx.beginPath();
-      ctx.moveTo(0, this.height * 0.18 + wave);
+      ctx.moveTo(0, h * 0.16 + wave1);
       ctx.bezierCurveTo(
-        this.width * 0.35, this.height * 0.08 - wave,
-        this.width * 0.65, this.height * 0.28 + wave,
-        this.width, this.height * 0.12 - wave
+        w * 0.35, h * 0.06 + wave2,
+        w * 0.65, h * 0.26 - wave1,
+        w, h * 0.10 + wave2
       );
-      ctx.lineTo(this.width, 0);
+      ctx.lineTo(w, 0);
       ctx.lineTo(0, 0);
       ctx.closePath();
       ctx.fill();
       ctx.restore();
     }
 
-    // 3. Cyber Moon / Celestial Body
-    const moonX = this.width * 0.78;
-    const moonY = Math.min(130, this.height * 0.18);
-    const moonR = Math.min(32, this.width * 0.065);
+    // 3. Cyber Moon / Celestial Body with Glowing Corona
+    const moonX = w * 0.78;
+    const moonY = Math.min(130, h * 0.18);
+    const moonR = Math.min(32, w * 0.065);
 
-    // Corona outer glow
-    const corona = ctx.createRadialGradient(moonX, moonY, moonR * 0.6, moonX, moonY, moonR * 2.8);
+    const corona = ctx.createRadialGradient(moonX, moonY, moonR * 0.5, moonX, moonY, moonR * 2.8);
     corona.addColorStop(0, c.moonGlow);
     corona.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = corona;
@@ -1137,27 +1282,23 @@ class FlappyGame {
     ctx.arc(moonX, moonY, moonR * 2.8, 0, Math.PI * 2);
     ctx.fill();
 
-    // Moon disc
     ctx.fillStyle = c.moonColor;
-    ctx.shadowColor = c.moonColor;
-    ctx.shadowBlur = 12;
+    ctx.shadowColor = c.moonGlow;
+    ctx.shadowBlur = 14;
     ctx.beginPath();
     ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Subtle moon inner shadow / crescent depth
-    ctx.fillStyle = 'rgba(10, 15, 30, 0.45)';
+    // Subtle moon crescent depth
+    ctx.fillStyle = 'rgba(10, 15, 30, 0.40)';
     ctx.beginPath();
     ctx.arc(moonX - moonR * 0.35, moonY - moonR * 0.15, moonR * 0.85, 0, Math.PI * 2);
     ctx.fill();
 
-    // 4. Parallax Starfield & Constellations
-    ctx.fillStyle = '#ffffff';
+    // 4. Parallax Starfield (Smooth Continuous Coordinates)
     this.bgStars.forEach(s => {
-      s.x -= s.depth * (this.state === 'PLAYING' ? this.speedMult : 0.25);
-      if (s.x < -4) { s.x = this.width + 4; s.y = Math.random() * this.height * 0.72; }
-      const twinkle = reduced ? 1 : (0.65 + Math.sin(this.frameCount * 0.04 + s.phase) * 0.35);
+      const twinkle = reduced ? 1 : (0.7 + Math.sin(this.frameCount * 0.035 + s.phase) * 0.3);
       ctx.globalAlpha = s.alpha * twinkle * c.star;
       ctx.fillStyle = s.color || '#ffffff';
       ctx.fillRect(s.x, s.y, s.size, s.size);
@@ -1168,8 +1309,8 @@ class FlappyGame {
     if (!reduced && this.state !== 'PAUSED') {
       if (Math.random() < 0.008 && this.shootingStars.length < 2) {
         this.shootingStars.push({
-          x: Math.random() * this.width * 0.8 + this.width * 0.2,
-          y: Math.random() * this.height * 0.25 + 20,
+          x: Math.random() * w * 0.8 + w * 0.2,
+          y: Math.random() * h * 0.25 + 20,
           len: Math.random() * 45 + 35,
           speed: Math.random() * 8 + 10,
           alpha: 1.0
@@ -1183,7 +1324,7 @@ class FlappyGame {
         star.y += star.speed * 0.45;
         star.alpha -= 0.035;
 
-        if (star.alpha <= 0 || star.x < -100 || star.y > this.height) {
+        if (star.alpha <= 0 || star.x < -100 || star.y > h) {
           this.shootingStars.splice(i, 1);
           continue;
         }
@@ -1201,12 +1342,6 @@ class FlappyGame {
 
     // 6. Volumetric Layered Clouds
     this.clouds.forEach(cl => {
-      cl.x -= cl.speed * (this.state === 'PLAYING' ? this.speedMult : 0.4);
-      if (cl.x < -120 * cl.scale) {
-        cl.x = this.width + 100;
-        cl.y = Math.random() * (this.height * 0.42) + 30;
-      }
-
       ctx.save();
       const cloudGrad = ctx.createLinearGradient(cl.x, cl.y - 30 * cl.scale, cl.x, cl.y + 20 * cl.scale);
       cloudGrad.addColorStop(0, 'rgba(255, 255, 255, 0.09)');
@@ -1225,11 +1360,6 @@ class FlappyGame {
     // 7. Ambient Cyber Motes / Floating Stardust
     if (!reduced) {
       this.ambientMotes.forEach(m => {
-        m.x -= m.vx * (this.state === 'PLAYING' ? this.speedMult : 0.3);
-        m.y -= m.vy;
-        if (m.x < -10) m.x = this.width + 10;
-        if (m.y < -10) m.y = this.groundY;
-
         const pulse = 0.5 + Math.sin(this.frameCount * 0.05 + m.phase) * 0.5;
         ctx.fillStyle = m.color;
         ctx.globalAlpha = m.alpha * pulse;
@@ -1245,38 +1375,65 @@ class FlappyGame {
     const ctx = this.ctx;
     const c = this.skyColors();
     const groundY = this.groundY;
-    const speed = this.state === 'PLAYING' ? this.speedMult : 0.3;
+    const w = this.width;
+    const h = this.height;
 
-    // Layer 1: Distant Mountains / Skyline (0.12x Parallax)
-    const farDrift = (this.frameCount * 0.12 * speed) % 140;
-    ctx.fillStyle = c.hillFar;
+    // --- LAYER 1: Distant Majestic Mountains (Parallax 0.08x) ---
+    ctx.fillStyle = c.mountainFar;
     ctx.beginPath();
-    ctx.moveTo(-140, groundY);
-    this.farMountains.forEach((m, i) => {
-      const x = i * 140 - farDrift;
-      ctx.lineTo(x, groundY - m.h);
-      ctx.lineTo(x + 70, groundY - m.h * 0.6);
-    });
-    ctx.lineTo(this.width + 140, groundY);
+    ctx.moveTo(0, groundY);
+    const step1 = 16;
+    for (let x = 0; x <= w + step1; x += step1) {
+      const worldX = x + this.scrollFar;
+      const mH = Math.sin(worldX * 0.0032) * (h * 0.09) +
+                 Math.sin(worldX * 0.0078 + 1.4) * (h * 0.05) +
+                 Math.cos(worldX * 0.015 + 2.8) * (h * 0.025) +
+                 (h * 0.17);
+      ctx.lineTo(x, groundY - Math.max(15, mH));
+    }
+    ctx.lineTo(w, groundY);
     ctx.closePath();
     ctx.fill();
 
-    // Layer 2: Midground Rolling Hills with Glowing Crest (0.28x Parallax)
-    const midDrift = (this.frameCount * 0.28 * speed) % 90;
-    ctx.fillStyle = c.hillMid;
+    // --- LAYER 2: Midground Cyber City Skyline & Spires (Parallax 0.22x) ---
+    ctx.fillStyle = c.skylineMid;
     ctx.beginPath();
-    ctx.moveTo(-90, groundY);
-    this.hills.forEach((h, i) => {
-      const x = i * 90 - midDrift;
-      ctx.lineTo(x, groundY - h.h);
-      ctx.lineTo(x + 45, groundY - h.h * 0.55);
-    });
-    ctx.lineTo(this.width + 90, groundY);
+    ctx.moveTo(0, groundY);
+    const step2 = 12;
+    for (let x = 0; x <= w + step2; x += step2) {
+      const worldX = x + this.scrollMid;
+      const sH = Math.sin(worldX * 0.0055 + 0.5) * (h * 0.065) +
+                 Math.cos(worldX * 0.012 + 1.8) * (h * 0.04) +
+                 (h * 0.11);
+      ctx.lineTo(x, groundY - Math.max(10, sH));
+    }
+    ctx.lineTo(w, groundY);
     ctx.closePath();
     ctx.fill();
 
-    // Hill crest rim light
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    // Skyline subtle edge glow
+    ctx.strokeStyle = 'rgba(0, 242, 254, 0.08)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // --- LAYER 3: Foreground Rolling Cyber Hills (Parallax 0.50x) ---
+    ctx.fillStyle = c.hillNear;
+    ctx.beginPath();
+    ctx.moveTo(0, groundY);
+    const step3 = 10;
+    for (let x = 0; x <= w + step3; x += step3) {
+      const worldX = x + this.scrollNear;
+      const hH = Math.sin(worldX * 0.009 + 2.1) * (h * 0.045) +
+                 Math.cos(worldX * 0.018 + 0.9) * (h * 0.025) +
+                 (h * 0.065);
+      ctx.lineTo(x, groundY - Math.max(8, hH));
+    }
+    ctx.lineTo(w, groundY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Hilltop neon rim light
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.10)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
   }
@@ -1298,7 +1455,7 @@ class FlappyGame {
 
       const edge = ghosting ? '#e2e8f0' : '#00f2fe';
 
-      // top
+      // top pipe
       ctx.fillStyle = grad;
       ctx.fillRect(pipe.x, 0, pipe.width, pipe.gapY);
       ctx.fillStyle = '#546e7a';
@@ -1309,7 +1466,7 @@ class FlappyGame {
       ctx.fillRect(pipe.x - 5, pipe.gapY - 4, pipe.width + 10, 4);
       ctx.shadowBlur = 0;
 
-      // bottom
+      // bottom pipe
       const bottomTop = pipe.gapY + pipe.gapHeight;
       ctx.fillStyle = grad;
       ctx.fillRect(pipe.x, bottomTop, pipe.width, Math.max(0, groundY - bottomTop));
@@ -1349,83 +1506,69 @@ class FlappyGame {
       ctx.stroke();
       ctx.globalAlpha = 1;
 
-      // Crisp vector icon rendering per power-up type
+      // Draw custom vector glyphs
       ctx.fillStyle = '#ffffff';
-      ctx.strokeStyle = '#ffffff';
-
       switch (p.type) {
-        case 'feather': // 5-point star
+        case 'feather':
           ctx.beginPath();
-          for (let i = 0; i < 5; i++) {
-            const outerA = (i * 4 * Math.PI) / 5 - Math.PI / 2;
-            const innerA = outerA + (2 * Math.PI) / 10;
-            const ox = Math.cos(outerA) * 8.5;
-            const oy = Math.sin(outerA) * 8.5;
-            const ix = Math.cos(innerA) * 4.2;
-            const iy = Math.sin(innerA) * 4.2;
-            if (i === 0) ctx.moveTo(ox, oy);
-            else ctx.lineTo(ox, oy);
-            ctx.lineTo(ix, iy);
+          for (let k = 0; k < 5; k++) {
+            const rot = (Math.PI / 2) * 3 + (k * Math.PI) / 2.5;
+            const ox = Math.cos(rot) * 6;
+            const oy = Math.sin(rot) * 6;
+            if (k === 0) ctx.moveTo(ox, oy); else ctx.lineTo(ox, oy);
+            const inRot = rot + Math.PI / 5;
+            ctx.lineTo(Math.cos(inRot) * 2.8, Math.sin(inRot) * 2.8);
           }
           ctx.closePath();
           ctx.fill();
           break;
 
-        case 'shield': // Shield badge
+        case 'shield':
           ctx.beginPath();
-          ctx.moveTo(0, -8);
-          ctx.quadraticCurveTo(7, -8, 7, -1);
-          ctx.quadraticCurveTo(7, 6, 0, 9);
-          ctx.quadraticCurveTo(-7, 6, -7, -1);
-          ctx.quadraticCurveTo(-7, -8, 0, -8);
+          ctx.moveTo(0, -6);
+          ctx.lineTo(5.5, -3);
+          ctx.lineTo(4.2, 3.5);
+          ctx.lineTo(0, 7);
+          ctx.lineTo(-4.2, 3.5);
+          ctx.lineTo(-5.5, -3);
           ctx.closePath();
           ctx.fill();
           break;
 
-        case 'slowmo': // Hourglass
+        case 'slowmo':
           ctx.beginPath();
-          ctx.moveTo(-6, -7);
-          ctx.lineTo(6, -7);
+          ctx.moveTo(-4.5, -5.5);
+          ctx.lineTo(4.5, -5.5);
           ctx.lineTo(0, 0);
-          ctx.lineTo(6, 7);
-          ctx.lineTo(-6, 7);
+          ctx.lineTo(4.5, 5.5);
+          ctx.lineTo(-4.5, 5.5);
           ctx.lineTo(0, 0);
           ctx.closePath();
           ctx.fill();
           break;
 
-        case 'magnet': // U-magnet
-          ctx.lineWidth = 3;
+        case 'magnet':
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = '#ffffff';
           ctx.beginPath();
-          ctx.arc(0, 1, 5.5, Math.PI, 0, true);
-          ctx.lineTo(5.5, -6);
-          ctx.moveTo(-5.5, 1);
-          ctx.lineTo(-5.5, -6);
-          ctx.stroke();
-          // Red tips
-          ctx.fillStyle = '#f43f5e';
-          ctx.fillRect(-7.2, -7.5, 3.5, 3);
-          ctx.fillRect(3.8, -7.5, 3.5, 3);
-          break;
-
-        case 'double': // Gem / Diamond
-          ctx.beginPath();
-          ctx.moveTo(0, -8);
-          ctx.lineTo(7, -2);
-          ctx.lineTo(0, 8);
-          ctx.lineTo(-7, -2);
-          ctx.closePath();
-          ctx.fill();
-          // Facet line
-          ctx.strokeStyle = p.color;
-          ctx.lineWidth = 1.2;
-          ctx.beginPath();
-          ctx.moveTo(-7, -2);
-          ctx.lineTo(7, -2);
+          ctx.arc(0, -1.5, 4.5, Math.PI, 0, false);
+          ctx.lineTo(4.5, 4.5);
+          ctx.moveTo(-4.5, -1.5);
+          ctx.lineTo(-4.5, 4.5);
           ctx.stroke();
           break;
 
-        case 'ghost': // Ghost silhouette
+        case 'double':
+          ctx.beginPath();
+          ctx.moveTo(0, -6.5);
+          ctx.lineTo(5.5, 0);
+          ctx.lineTo(0, 6.5);
+          ctx.lineTo(-5.5, 0);
+          ctx.closePath();
+          ctx.fill();
+          break;
+
+        case 'ghost':
           ctx.beginPath();
           ctx.arc(0, -2, 6.5, Math.PI, 0, false);
           ctx.lineTo(6.5, 6.5);
@@ -1435,7 +1578,6 @@ class FlappyGame {
           ctx.lineTo(-6.5, 6.5);
           ctx.closePath();
           ctx.fill();
-          // Eyes
           ctx.fillStyle = '#0f172a';
           ctx.beginPath();
           ctx.arc(-2.2, -2, 1.4, 0, Math.PI * 2);
@@ -1549,8 +1691,7 @@ class FlappyGame {
     ctx.fillRect(0, groundY, this.width, 4);
     ctx.shadowBlur = 0;
 
-    const moving = this.state !== 'PAUSED' && this.state !== 'GAMEOVER';
-    const offset = (this.frameCount * 2.5 * (moving ? this.speedMult : 0)) % 24;
+    const offset = this.scrollGround % 24;
     ctx.strokeStyle = 'rgba(255,255,255,0.06)';
     ctx.lineWidth = 1;
     for (let x = -offset; x < this.width + 24; x += 24) {
@@ -1612,51 +1753,68 @@ class FlappyGame {
       this.accumulator -= STEP_MS;
       steps++;
     }
-    if (steps === 5) this.accumulator = 0;   // machine can't keep up; don't spiral
+    if (steps === 5) this.accumulator = 0;
 
     this.render();
   }
 }
 
 /* --------------------------------------------------------------------------
-   ACHIEVEMENT CATALOGUE
+   ACHIEVEMENT CATALOGUE (43 Balanced High-Tier Awards)
    -------------------------------------------------------------------------- */
 const ACHIEVEMENTS = [
-  { id: 'first_flight',   icon: '<i class="fa-solid fa-feather"></i>',         title: 'First Flight',    desc: 'Score 5 points in a single run' },
-  { id: 'eagle_eyes',     icon: '<i class="fa-solid fa-eye"></i>',             title: 'Eagle Eyes',      desc: 'Score 10 points in a single run' },
-  { id: 'silver_wings',   icon: '<i class="fa-solid fa-wind"></i>',            title: 'Silver Wings',    desc: 'Score 15 points in a single run' },
-  { id: 'storm_rider',    icon: '<i class="fa-solid fa-cloud-bolt"></i>',      title: 'Storm Rider',     desc: 'Score 25 points in a single run' },
-  { id: 'cloud_runner',   icon: '<i class="fa-solid fa-cloud"></i>',           title: 'Cloud Runner',    desc: 'Score 35 points in a single run' },
-  { id: 'sky_sovereign',  icon: '<i class="fa-solid fa-crown"></i>',           title: 'Sky Sovereign',   desc: 'Score 50 points in a single run' },
-  { id: 'century_club',   icon: '<i class="fa-solid fa-award"></i>',           title: 'Century Club',    desc: 'Score 75 points in a single run' },
-  { id: 'legend',         icon: '<i class="fa-solid fa-trophy"></i>',          title: 'Legend of FMS',   desc: 'Score 100 points in a single run' },
-  { id: 'immortal',       icon: '<i class="fa-solid fa-infinity"></i>',        title: 'Sky Immortal',    desc: 'Score 150 points in a single run' },
+  // --- SCORE MILESTONES (Progressive from Novice to Grandmaster) ---
+  { id: 'first_flight',       icon: '<i class="fa-solid fa-feather"></i>',           title: 'First Flight',        desc: 'Score 10 points in a single run' },
+  { id: 'cadet',              icon: '<i class="fa-solid fa-plane"></i>',             title: 'Flight Cadet',        desc: 'Score 25 points in a single run' },
+  { id: 'bronze_aviator',     icon: '<i class="fa-solid fa-eye"></i>',               title: 'Bronze Aviator',      desc: 'Score 50 points in a single run' },
+  { id: 'silver_wings',       icon: '<i class="fa-solid fa-wind"></i>',              title: 'Silver Wings',        desc: 'Score 100 points in a single run' },
+  { id: 'century_club',       icon: '<i class="fa-solid fa-award"></i>',             title: 'Double Century',      desc: 'Score 200 points in a single run' },
+  { id: 'sky_sovereign',      icon: '<i class="fa-solid fa-crown"></i>',             title: 'Sky Sovereign',       desc: 'Score 350 points in a single run' },
+  { id: 'legend',             icon: '<i class="fa-solid fa-trophy"></i>',            title: 'Legend of FMS',       desc: 'Score 500 points in a single run' },
+  { id: 'immortal',           icon: '<i class="fa-solid fa-infinity"></i>',          title: 'Sky Immortal',        desc: 'Score 750 points in a single run' },
+  { id: 'cosmic_ascendant',   icon: '<i class="fa-solid fa-meteor"></i>',            title: 'Cosmic Ascendant',    desc: 'Score 1,000 points in a single run' },
+  { id: 'apex_predator',      icon: '<i class="fa-solid fa-fire-flame-curved"></i>', title: 'Apex Predator',      desc: 'Score 1,500 points in a single run' },
 
-  { id: 'combo_5',        icon: '<i class="fa-solid fa-bolt-lightning"></i>',  title: 'Spark',           desc: 'Reach a 5-pillar combo' },
-  { id: 'combo_10',       icon: '<i class="fa-solid fa-fire"></i>',            title: 'Heating Up',      desc: 'Reach a 10-pillar combo' },
-  { id: 'combo_25',       icon: '<i class="fa-solid fa-meteor"></i>',          title: 'Unbroken',        desc: 'Reach a 25-pillar combo' },
-  { id: 'combo_40',       icon: '<i class="fa-solid fa-fire-flame-curved"></i>', title: 'Solar Flare',    desc: 'Reach a 40-pillar combo' },
+  // --- COMBOS & STREAKS ---
+  { id: 'combo_5',            icon: '<i class="fa-solid fa-bolt-lightning"></i>',    title: 'Spark',               desc: 'Reach a 5-pillar combo' },
+  { id: 'combo_15',           icon: '<i class="fa-solid fa-fire"></i>',              title: 'Heating Up',          desc: 'Reach a 15-pillar combo' },
+  { id: 'combo_30',           icon: '<i class="fa-solid fa-volcano"></i>',           title: 'Unbroken Flow',       desc: 'Reach a 30-pillar combo' },
+  { id: 'combo_60',           icon: '<i class="fa-solid fa-sun"></i>',               title: 'Solar Flare',         desc: 'Reach a 60-pillar combo' },
+  { id: 'combo_100',          icon: '<i class="fa-solid fa-atom"></i>',              title: 'Hyper Drive',         desc: 'Reach a 100-pillar combo' },
+  { id: 'combo_150',          icon: '<i class="fa-solid fa-dna"></i>',               title: 'Singularity',         desc: 'Reach a 150-pillar combo' },
 
-  { id: 'close_call',     icon: '<i class="fa-solid fa-angles-right"></i>',    title: 'Razor Edge',      desc: 'Execute a close call near a pillar' },
-  { id: 'daredevil',      icon: '<i class="fa-solid fa-bolt"></i>',            title: 'Daredevil',       desc: '5 close calls in one run' },
-  { id: 'edge_master',    icon: '<i class="fa-solid fa-crosshairs"></i>',      title: 'Precision Ace',   desc: '10 close calls in one run' },
+  // --- PRECISION & CLOSE CALLS ---
+  { id: 'close_call',         icon: '<i class="fa-solid fa-angles-right"></i>',      title: 'Razor Edge',          desc: 'Execute 1 close call near a pillar' },
+  { id: 'daredevil',          icon: '<i class="fa-solid fa-bolt"></i>',              title: 'Daredevil',           desc: '5 close calls in a single run' },
+  { id: 'edge_master',        icon: '<i class="fa-solid fa-crosshairs"></i>',        title: 'Precision Ace',       desc: '15 close calls in a single run' },
+  { id: 'ghost_wire',         icon: '<i class="fa-solid fa-bullseye"></i>',          title: 'Ghostwire Master',    desc: '30 close calls in a single run' },
 
-  { id: 'first_pickup',   icon: '<i class="fa-solid fa-star"></i>',            title: 'First Pickup',    desc: 'Collect your first power-up' },
-  { id: 'collector',      icon: '<i class="fa-solid fa-gift"></i>',            title: 'Collector',       desc: 'Grab 5 power-ups in one run' },
-  { id: 'arsenal',        icon: '<i class="fa-solid fa-boxes-stacked"></i>',   title: 'Sky Arsenal',     desc: 'Grab 10 power-ups in one run' },
-  { id: 'purist',         icon: '<i class="fa-solid fa-spa"></i>',             title: 'Purist',          desc: 'Reach 20 without any power-ups' },
+  // --- MODE MASTERY ---
+  { id: 'classic_veteran',    icon: '<i class="fa-solid fa-medal"></i>',             title: 'Classic Veteran',     desc: 'Score 150+ in Classic Mode' },
+  { id: 'classic_titan',      icon: '<i class="fa-solid fa-gem"></i>',               title: 'Classic Titan',       desc: 'Score 400+ in Classic Mode' },
+  { id: 'hardcore_survivor',  icon: '<i class="fa-solid fa-shield-virus"></i>',      title: 'Hardcore Survivor',   desc: 'Score 30+ in Hardcore Mode' },
+  { id: 'iron_wings',         icon: '<i class="fa-solid fa-skull"></i>',             title: 'Iron Wings',          desc: 'Score 75+ in Hardcore Mode' },
+  { id: 'hardcore_god',       icon: '<i class="fa-solid fa-dragon"></i>',            title: 'Hardcore God',        desc: 'Score 150+ in Hardcore Mode' },
+  { id: 'zen_wanderer',       icon: '<i class="fa-solid fa-feather-pointed"></i>',   title: 'Zen Wanderer',        desc: 'Score 200+ in Zen Mode' },
+  { id: 'zen_enlightenment',  icon: '<i class="fa-solid fa-moon"></i>',              title: 'Zen Enlightenment',   desc: 'Score 500+ in Zen Mode' },
+  { id: 'zen_transcendence',  icon: '<i class="fa-solid fa-spa"></i>',               title: 'Zen Transcendence',   desc: 'Score 1,000+ in Zen Mode' },
+  { id: 'all_modes',          icon: '<i class="fa-solid fa-compass"></i>',           title: 'Well Travelled',      desc: 'Set a score in all 3 game modes' },
 
-  { id: 'shielded',       icon: '<i class="fa-solid fa-shield-halved"></i>',   title: 'Bounced',         desc: 'Survive a crash with a shield' },
-  { id: 'ghost_walk',     icon: '<i class="fa-solid fa-ghost"></i>',           title: 'Ghost Walk',      desc: 'Phase straight through a pillar' },
-  { id: 'classic_ace',    icon: '<i class="fa-solid fa-medal"></i>',           title: 'Classic Ace',     desc: 'Score 40 in Classic mode' },
-  { id: 'hardcore_20',    icon: '<i class="fa-solid fa-skull"></i>',           title: 'Iron Wings',      desc: 'Score 20 in Hardcore mode' },
-  { id: 'zen_master',     icon: '<i class="fa-solid fa-moon"></i>',            title: 'Zen Master',      desc: 'Score 50 in Zen mode' },
-  { id: 'all_modes',      icon: '<i class="fa-solid fa-compass"></i>',         title: 'Well Travelled',  desc: 'Set a score in all three modes' },
+  // --- SKILL & POWER-UP TACTICS ---
+  { id: 'first_pickup',       icon: '<i class="fa-solid fa-star"></i>',              title: 'First Pickup',        desc: 'Collect your first power-up' },
+  { id: 'collector',          icon: '<i class="fa-solid fa-gift"></i>',              title: 'Collector',           desc: 'Grab 10 power-ups in one run' },
+  { id: 'arsenal',            icon: '<i class="fa-solid fa-boxes-stacked"></i>',     title: 'Sky Arsenal',         desc: 'Grab 25 power-ups in one run' },
+  { id: 'purist',             icon: '<i class="fa-solid fa-shield"></i>',            title: 'Purist Aviator',      desc: 'Score 50 without collecting any power-ups' },
+  { id: 'shielded',           icon: '<i class="fa-solid fa-shield-halved"></i>',     title: 'Bounced',             desc: 'Survive a lethal crash with a shield' },
+  { id: 'iron_shield',        icon: '<i class="fa-solid fa-shield-heart"></i>',      title: 'Aegis Sentinel',      desc: 'Survive 3 shield saves in one run' },
+  { id: 'ghost_walk',         icon: '<i class="fa-solid fa-ghost"></i>',             title: 'Ghost Walk',          desc: 'Phase straight through 5 pillars in one run' },
 
-  { id: 'top_pilot',      icon: '<i class="fa-solid fa-ranking-star"></i>',    title: 'Campus Legend',   desc: 'Enter the FMS Top 10 Leaderboard' },
-  { id: 'frequent_flyer', icon: '<i class="fa-solid fa-plane"></i>',           title: 'Frequent Flyer',  desc: 'Play 10 runs' },
-  { id: 'persistent',     icon: '<i class="fa-solid fa-rotate-right"></i>',    title: 'Persistent',      desc: 'Play 25 runs' },
-  { id: 'veteran_pilot',  icon: '<i class="fa-solid fa-user-astronaut"></i>',  title: 'Veteran Aviator', desc: 'Play 100 total runs' },
-  { id: 'marathon',       icon: '<i class="fa-solid fa-plane-departure"></i>', title: 'Marathon',        desc: 'Fly 10,000m in total' },
-  { id: 'sky_nomad',      icon: '<i class="fa-solid fa-globe"></i>',           title: 'Sky Nomad',       desc: 'Fly 25,000m in total' }
+  // --- CAMPUS PRESTIGE & DEDICATION ---
+  { id: 'top_pilot',          icon: '<i class="fa-solid fa-ranking-star"></i>',      title: 'Campus Legend',       desc: 'Enter the FMS Campus Leaderboard' },
+  { id: 'frequent_flyer',     icon: '<i class="fa-solid fa-plane-up"></i>',          title: 'Frequent Flyer',      desc: 'Complete 20 total flight runs' },
+  { id: 'persistent',         icon: '<i class="fa-solid fa-rotate-right"></i>',      title: 'Persistent',          desc: 'Complete 50 total flight runs' },
+  { id: 'veteran_pilot',      icon: '<i class="fa-solid fa-user-astronaut"></i>',    title: 'Veteran Aviator',     desc: 'Complete 150 total runs' },
+  { id: 'marathon',           icon: '<i class="fa-solid fa-plane-departure"></i>',   title: 'Marathon',            desc: 'Fly 25,000m total distance' },
+  { id: 'sky_nomad',          icon: '<i class="fa-solid fa-globe"></i>',             title: 'Sky Nomad',           desc: 'Fly 75,000m total distance' },
+  { id: 'orbital_voyager',    icon: '<i class="fa-solid fa-satellite"></i>',         title: 'Orbital Voyager',     desc: 'Fly 200,000m total distance' }
 ];

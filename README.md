@@ -5,7 +5,7 @@
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable%20Offline-00f2fe?style=for-the-badge&logo=pwa&logoColor=white)](https://flappyfms.vercel.app/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
-**Flappy FMS** is a high-performance, full-screen HTML5 Canvas arcade flight game built for the Faculty of Management Studies (FMS) community and web gamers worldwide. Guide a soaring red eagle through neon-lit obstacles, collect power-ups, earn medals, enter the **FMS Campus Leaderboard Top 10**, and unlock **28 unique achievements** — 100% free, zero ads, no sign-up, with instant offline PWA installability.
+**Flappy FMS** is a high-performance, full-screen HTML5 Canvas arcade flight game built for the Faculty of Management Studies (FMS) community and web gamers worldwide. Guide a soaring red eagle through neon-lit obstacles, collect power-ups, earn medals, enter the **FMS Campus Leaderboard Top 10**, and unlock **43 unique achievements** — 100% free, zero ads, no sign-up, with instant offline PWA installability.
 
 ---
 
@@ -37,13 +37,13 @@
 | **2x Points** | Doubles all score gains | 10 seconds | Cyan gemstone |
 | **Ghost Phase** | Fly directly through solid pillars | 5 seconds | Silver ghost silhouette |
 
-### 5. 28 Unlockable Achievements
-- **Score Milestones**: First Flight (5), Eagle Eyes (10), Silver Wings (15), Storm Rider (25), Cloud Runner (35), Sky Sovereign (50), Century Club (75), Legend of FMS (100), Sky Immortal (150).
-- **Combos & Streaks**: Spark (5), Heating Up (10), Unbroken (25), Solar Flare (40).
-- **Precision & Daredevil**: Razor Edge (1 near miss), Daredevil (5 near misses), Precision Ace (10 near misses).
-- **Power-Up Mastery**: First Pickup, Collector (5 pickups), Sky Arsenal (10 pickups), Purist (20 pts without pickups), Bounced (Shield save), Ghost Walk (Phase through pillar).
-- **Mode Aces & Leaderboard**: Classic Ace (40 Classic), Iron Wings (20 Hardcore), Zen Master (50 Zen), Well Travelled (all 3 modes), **Campus Legend** (Enter FMS Top 10).
-- **Dedication & Distance**: Frequent Flyer (10 runs), Persistent (25 runs), Veteran Aviator (100 runs), Marathon (10,000m), Sky Nomad (25,000m).
+### 5. 43 Unlockable Achievements
+- **Score Milestones (Up to 1,500 Points)**: First Flight (10), Flight Cadet (25), Bronze Aviator (50), Silver Wings (100), Double Century (200), Sky Sovereign (350), Legend of FMS (500), Sky Immortal (750), Cosmic Ascendant (1,000), Apex Predator (1,500).
+- **Combos & Streaks**: Spark (5), Heating Up (15), Unbroken Flow (30), Solar Flare (60), Hyper Drive (100), Singularity (150).
+- **Precision & Close Calls**: Razor Edge (1 near miss), Daredevil (5 near misses), Precision Ace (15 near misses), Ghostwire Master (30 near misses).
+- **Mode Mastery**: Classic Veteran (150 Classic), Classic Titan (400 Classic), Hardcore Survivor (30 Hardcore), Iron Wings (75 Hardcore), Hardcore God (150 Hardcore), Zen Wanderer (200 Zen), Zen Enlightenment (500 Zen), Zen Transcendence (1,000 Zen), Well Travelled (All 3 modes).
+- **Power-Up Mastery & Tactics**: First Pickup, Collector (10 pickups), Sky Arsenal (25 pickups), Purist Aviator (50 pts without pickups), Bounced (Shield save), Aegis Sentinel (3 Shield saves), Ghost Walk (Phase through 5 pillars).
+- **Campus Prestige & Dedication**: Campus Legend (Enter FMS Top 10), Frequent Flyer (20 runs), Persistent (50 runs), Veteran Aviator (150 runs), Marathon (25,000m), Sky Nomad (75,000m), Orbital Voyager (200,000m).
 
 ---
 
