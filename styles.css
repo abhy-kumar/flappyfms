@@ -305,8 +305,8 @@ body {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: 28px 22px;
-  width: 100%;
-  max-width: 380px;
+  width: min(94vw, 440px);
+  max-width: 440px;
   text-align: center;
   box-shadow: var(--shadow-glow);
   display: flex;
@@ -316,7 +316,7 @@ body {
   overflow: hidden;
   animation: cardIn 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.2);
 }
-.menu-card.compact { max-width: 320px; }
+.menu-card.compact { max-width: 340px; }
 
 /* Long dialogs scroll internally, and their CLOSE button sticks to the bottom
    so it is always reachable without hunting for the end of the list. */
@@ -473,18 +473,25 @@ button > * {
 }
 .btn-secondary:hover { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.3); }
 
-.btn-row { display: flex; gap: 7px; width: 100%; margin-top: 9px; }
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  margin-top: 9px;
+}
 
 .btn-ghost {
-  flex: 1;
-  min-height: 40px;
-  padding: 9px 6px;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 38px;
+  padding: 8px 4px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-muted);
-  font-size: clamp(0.58rem, 2.4vw, 0.68rem);
+  font-size: clamp(0.56rem, 2.1vw, 0.66rem);
   font-weight: 800;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
   white-space: nowrap;
 }
 .btn-ghost:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.28); }
@@ -1098,7 +1105,9 @@ input.switch:checked::after { transform: translateX(20px); }
   .lifetime-strip { margin-top: 10px; padding-top: 9px; }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 420px) {
+  .menu-card { padding: 22px 14px; }
+  .btn-ghost { font-size: 0.58rem; padding: 7px 3px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .mode-name { font-size: 0.65rem; }
   .hud-actions { gap: 6px; }
