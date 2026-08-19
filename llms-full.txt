@@ -1,0 +1,132 @@
+# Flappy FMS — Complete Technical & Game Design Reference
+
+> This document is the full technical, architectural, and game design reference for Flappy FMS (https://flappyfms.vercel.app/).
+
+## Table of Contents
+1. Executive Overview
+2. Entity & Institutional Identity
+3. Core Gameplay Loop & Mechanics
+4. Flight Dynamics & Physics Specification
+5. Power-Up System Specification
+6. Campus Leaderboard & Data Persistence
+7. Complete 28 Achievement List & Criteria
+8. Procedural Web Audio Engine
+9. Progressive Web App (PWA) Implementation
+10. SEO, Schema Graph & Accessibility Compliance
+
+---
+
+## 1. Executive Overview
+Flappy FMS is an open-source, web-native arcade flight game built using Vanilla JavaScript, HTML5 Canvas, modern CSS glassmorphism, and the Web Audio API. It is deployed as a Progressive Web App (PWA) on the Vercel Edge Network at `https://flappyfms.vercel.app/`.
+
+The game was designed and developed by Abhishek Kumar for the Faculty of Management Studies (FMS), University of Delhi student community and casual arcade gaming enthusiasts.
+
+---
+
+## 2. Entity & Institutional Identity
+- **Parent Institution**: Faculty of Management Studies (FMS), University of Delhi, Delhi, India (https://fms.edu, Wikipedia: https://en.wikipedia.org/wiki/Faculty_of_Management_Studies_(Delhi)).
+- **Project Lead**: Abhishek Kumar (https://github.com/abhy-kumar, abhiks177@gmail.com).
+- **Target Audience**: Students, alumni, faculty, and international arcade web gamers.
+- **Access Model**: 100% Free, Open Access, No Ads, No In-App Purchases, No User Tracking.
+
+---
+
+## 3. Core Gameplay Loop & Mechanics
+Players pilot an agile red eagle through vertical neon-lit pillar gates.
+- **Flight Impulse**: Tapping, clicking, or pressing Space / Up / W applies an instantaneous upward velocity impulse (`-6.8 px/frame` nominal).
+- **Gravity**: A continuous downward gravitational acceleration (`0.28 px/frame²` nominal) pulls the eagle toward the lower screen boundary.
+- **Collision Detection**: Sub-pixel circle-to-rectangle and circle-to-circle collision checks evaluate clearance against obstacles, ceiling, floor, and collectible power-ups.
+- **Score Multiplier**: Every 5 consecutively cleared pillar gates without obstacle collision increases the active combo multiplier up to 5× (`1×`, `2×`, `3×`, `4×`, `5×`).
+- **Close Calls**: Navigating within 20 pixels of an obstacle edge awards a "Near Miss / Close Call" bonus score.
+
+---
+
+## 4. Flight Dynamics & Physics Specification
+The game utilizes a **fixed 60 Hz physics timestep** (`dt = 1/60` second) decoupled from screen refresh rates, ensuring deterministic physics across 60 Hz, 90 Hz, 120 Hz, 144 Hz, and 240 Hz displays.
+
+### Mode Parameters:
+| Parameter | Classic Mode | Hardcore Mode | Zen Mode |
+|---|---|---|---|
+| Initial Velocity | 2.4 px/step | 3.2 px/step | 1.8 px/step |
+| Max Velocity | 4.6 px/step | 5.8 px/step | 1.8 px/step (Constant) |
+| Gap Clearance | 38% Canvas Height | 30% Canvas Height | 46% Canvas Height |
+| Obstacle Motion | Static Vertical | Oscillating Sinusoidal | Static Vertical |
+| Gravity Scale | 1.0× | 1.15× | 0.75× |
+| Flap Force | 1.0× | 1.05× | 0.9× |
+
+---
+
+## 5. Power-Up System Specification
+Power-ups spawn inside pillar gaps with procedural rarity:
+1. **Golden Feather** (Rarity: 35%): +5 points (+10 with 2× active).
+2. **Shield Orb** (Rarity: 20%): Deflects one lethal impact with a pillar.
+3. **Slow-Mo Clock** (Rarity: 15%): Slows pillar speed by 45% and gravity by 25% for 6.0 seconds.
+4. **Magnet** (Rarity: 12%): Attracts pickups within 250px radius for 8.0 seconds.
+5. **2× Points Gem** (Rarity: 10%): Multiplies all point gains by 2 for 10.0 seconds.
+6. **Ghost Phase** (Rarity: 8%): Passes through solid obstacles with zero damage for 5.0 seconds.
+
+---
+
+## 6. Campus Leaderboard & Data Persistence
+- **Top 10 Rankings**: When a player completes a run that ranks within the Top 10 scores for any game mode, a modal prompts for a custom **Pilot Call Sign** (up to 18 characters).
+- **Storage Engine**: Data is safely persisted in browser `localStorage` under `flappyfms_leaderboard_v2`, protected by a robust serialization layer with fallback to in-memory state if cookies/storage are disabled.
+- **Cross-Tab Sync**: Storage event listeners broadcast updates across open browser tabs in real time.
+
+---
+
+## 7. Complete 28 Achievement List & Criteria
+1. `first_flight`: Score 5 points in any mode
+2. `eagle_eyes`: Score 10 points
+3. `silver_wings`: Score 15 points
+4. `storm_rider`: Score 25 points
+5. `cloud_runner`: Score 35 points
+6. `sky_sovereign`: Score 50 points
+7. `century_club`: Score 75 points
+8. `legend_of_fms`: Score 100 points
+9. `sky_immortal`: Score 150 points
+10. `spark`: Reach 5× combo streak
+11. `heating_up`: Reach 10× combo streak
+12. `unbroken`: Reach 25× combo streak
+13. `solar_flare`: Reach 40× combo streak
+14. `razor_edge`: Perform 1 close call
+15. `daredevil`: Perform 5 close calls in a single run
+16. `precision_ace`: Perform 10 close calls in a single run
+17. `first_pickup`: Collect 1 power-up
+18. `collector`: Collect 5 power-ups in a run
+19. `sky_arsenal`: Collect 10 power-ups in a run
+20. `purist`: Score 20 points without collecting any power-ups
+21. `bounced`: Survive a lethal crash using Shield Orb
+22. `ghost_walk`: Phase through a pillar during Ghost mode
+23. `classic_ace`: Score 40+ points in Classic Mode
+24. `iron_wings`: Score 20+ points in Hardcore Mode
+25. `zen_master`: Score 50+ points in Zen Mode
+26. `well_travelled`: Play all three game modes
+27. `campus_legend`: Enter the FMS Campus Leaderboard Top 10
+28. `frequent_flyer`: Complete 10 total flight runs
+
+---
+
+## 8. Procedural Web Audio Engine
+Flappy FMS features an entirely procedural Web Audio synthesizer (`js/audio.js`):
+- Flap sound: Frequency sweep oscillator (`sine` wave, 220Hz -> 440Hz, 80ms decay).
+- Score chime: Dual-tone chime (`triangle` wave, 587Hz -> 880Hz).
+- Power-up pickup: Arpeggiated high chime (`triangle` wave, 440Hz -> 660Hz -> 880Hz).
+- Shield crash: White noise burst combined with damped low-pass filter.
+- Game over: Downward descending minor triad (`sawtooth` wave, 330Hz -> 220Hz -> 165Hz).
+- Background dynamic soundtrack: Procedurally sequenced bass and melody tracks.
+
+---
+
+## 9. Progressive Web App (PWA) Implementation
+- **Service Worker (`sw.js`)**: Employs a Network-First strategy with an offline fallback cache (`flappyfms-v2.4`).
+- **Web App Manifest (`manifest.webmanifest`)**: Defines standalone display mode, orientation support, theme color (`#c0262d`), and background color (`#0d1321`).
+- **Install Flow**: Automatically listens for `beforeinstallprompt` and surfaces an in-menu "INSTALL APP" button.
+
+---
+
+## 10. Canonical Reference & Official Links
+- **Website**: https://flappyfms.vercel.app/
+- **GitHub**: https://github.com/abhy-kumar/flappyfms
+- **Sitemap**: https://flappyfms.vercel.app/sitemap.xml
+- **Robots.txt**: https://flappyfms.vercel.app/robots.txt
+- **LLMs.txt**: https://flappyfms.vercel.app/llms.txt

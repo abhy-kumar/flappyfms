@@ -1,4 +1,26 @@
+# ==============================================================================
+# ROBOTS.TXT - FLAPPY FMS (https://flappyfms.vercel.app/)
+# ==============================================================================
+
 User-agent: *
 Allow: /
 
+# Directives for AI Search and LLM Crawlers (Generative Engine Optimization)
+User-agent: GPTBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Sitemaps & Machine-Readable Context
 Sitemap: https://flappyfms.vercel.app/sitemap.xml
+# LLMs Context: https://flappyfms.vercel.app/llms.txt

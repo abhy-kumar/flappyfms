@@ -2,7 +2,7 @@
    SERVICE WORKER - FLAPPY FMS (PWA NETWORK-FIRST & OFFLINE CACHE)
    ========================================================================== */
 
-const CACHE_NAME = 'flappyfms-v2.3';
+const CACHE_NAME = 'flappyfms-v2.4';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const ASSETS = [
   './manifest.webmanifest',
   './bird.png',
   './bird.jpeg',
+  './og-image.png',
   './js/store.js',
   './js/audio.js',
   './js/game.js',
@@ -17,6 +18,7 @@ const ASSETS = [
   './robots.txt',
   './sitemap.xml',
   './llms.txt',
+  './llms-full.txt',
   'https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Press+Start+2P&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css'
 ];

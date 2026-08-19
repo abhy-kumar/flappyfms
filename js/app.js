@@ -41,6 +41,7 @@
       entry: $('leaderboard-entry-modal'),
       leaderboard: $('leaderboard-modal'),
       help: $('help-modal'),
+      about: $('about-modal'),
       settings: $('settings-modal'),
       achievements: $('achievements-modal'),
       pause: $('pause-modal')
@@ -712,6 +713,7 @@
     wire('gameover-leaderboard', openLeaderboardModal);
 
     wire('menu-help', () => { sounds.playClick(); openModal('help'); });
+    wire('menu-about', () => { sounds.playClick(); openModal('about'); });
     wire('menu-settings', () => { sounds.playClick(); syncSettingsUI(); openModal('settings'); });
     wire('menu-achievements', () => { sounds.playClick(); renderAchievements(); openModal('achievements'); });
     wire('gameover-achievements', () => { sounds.playClick(); renderAchievements(); openModal('achievements'); });
@@ -719,6 +721,7 @@
     // Modal close buttons
     wire('leaderboard-close', () => { sounds.playClick(); closeModal('leaderboard'); });
     wire('help-close', () => { sounds.playClick(); closeModal('help'); });
+    wire('about-close', () => { sounds.playClick(); closeModal('about'); });
     wire('settings-close', () => { sounds.playClick(); closeModal('settings'); });
     wire('achievements-close', () => { sounds.playClick(); closeModal('achievements'); });
 
@@ -727,7 +730,7 @@
     });
 
     // Close on dimmed backdrop click
-    ['help', 'settings', 'achievements', 'leaderboard', 'entry'].forEach(name => {
+    ['help', 'about', 'settings', 'achievements', 'leaderboard', 'entry'].forEach(name => {
       if (modals[name]) {
         modals[name].addEventListener('pointerdown', (e) => {
           if (e.target === modals[name]) {

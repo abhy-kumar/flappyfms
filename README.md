@@ -51,13 +51,16 @@
 
 ```
 flappyfms/
-├── index.html            # PWA shell, SEO schemas, Open Graph, DOM UI & modals
+├── index.html            # PWA shell, unified @graph SEO schemas, Open Graph, DOM UI & modals
 ├── styles.css            # Responsive glassmorphism styling & design system
 ├── manifest.webmanifest  # Web App Manifest for mobile installation
-├── sw.js                 # Service Worker for offline asset caching
-├── sitemap.xml           # XML Sitemap targeting flappyfms.vercel.app
-├── robots.txt            # Search engine crawler permissions
-├── llms.txt              # Generative Engine Optimization (GEO) standard
+├── sw.js                 # Service Worker for offline asset caching (v2.4)
+├── vercel.json           # Edge caching headers, security headers & clean URLs
+├── sitemap.xml           # XML Image Sitemap targeting flappyfms.vercel.app
+├── robots.txt            # Search engine & AI crawler permissions (GPTBot, Perplexity)
+├── llms.txt              # Generative Engine Optimization (GEO) standard summary
+├── llms-full.txt         # Complete machine-readable technical and design reference
+├── og-image.png          # 1200x630 high-resolution social preview banner
 ├── bird.png              # Primary transparent eagle sprite
 ├── bird.jpeg             # Fallback sprite
 └── js/
@@ -77,10 +80,11 @@ flappyfms/
 | **Primary Domain** | `https://flappyfms.vercel.app/` with exact canonical match |
 | **Title Optimization** | 50 characters (ideal for Google mobile & desktop search results) |
 | **Meta Description** | 145 characters (optimal SERP snippet display without truncation) |
-| **Structured Data** | `VideoGame`, `WebSite`, `BreadcrumbList`, `FAQPage`, `CollegeOrUniversity` (FMS) |
+| **Social Graph** | 1200×630 Open Graph & Twitter Cards (`og-image.png`) |
+| **Structured Data** | Unified `@graph` JSON-LD (`VideoGame`, `WebSite`, `WebPage`, `HowTo`, `FAQPage`, `CollegeOrUniversity`, `Person`) |
+| **Edge Performance** | `vercel.json` with 1-year immutable caching on static assets & security headers |
+| **AI Search (GEO)** | Full `llms.txt` and `llms-full.txt` machine-readable context |
 | **Single H1 Tag** | Clean semantic hierarchy with keyword-rich H2/H3 subsections |
-| **Keyword Density** | Optimized for *Flappy FMS*, *arcade browser game*, *campus leaderboard*, *free online game* |
-| **Performance** | Sub-20ms TTFB on Vercel Edge Network, 0.1MB bundle, 60 FPS Canvas |
 
 ### 2. Viral Growth & Engagement Loops
 - **Campus Pride & Rivalry**: The Top 10 Hall of Fame drives healthy competition across FMS batches and departments.

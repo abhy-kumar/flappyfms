@@ -1,59 +1,81 @@
 # Flappy FMS
 
-> Flappy FMS is a free online arcade flight game designed for the Faculty of Management Studies (FMS) community and web gamers. Players pilot a red eagle through neon-lit obstacles. No download or sign-up required — play instantly in any web browser or install as a Progressive Web App (PWA).
+> Flappy FMS is a free online arcade flight game created for the Faculty of Management Studies (FMS) community and gamers worldwide. Players soar as a red eagle through glowing neon pillars across three game modes, using six collectible power-ups, competing on the FMS Campus Leaderboard, and unlocking 28 achievements. Play instantly in any web browser without ads, downloads, or account registration, or install as a Progressive Web App (PWA) for 100% offline gameplay.
 
-## About
+## Project Summary
 
-Flappy FMS is built with pure HTML5 Canvas, Vanilla JavaScript, CSS3 and the Web Audio API. It features three game modes, six collectible power-ups, an FMS Campus Top 10 Leaderboard with pilot name entry, combo multipliers, medals, 28 achievements, parallax sky backgrounds, and per-mode high scores. The simulation runs on a fixed 60 Hz timestep so physics behave consistently across 60 Hz, 120 Hz and 144 Hz displays.
+- **Title**: Flappy FMS
+- **Alternate Names**: Flappy Eagle, Flappy FMS Arcade
+- **Genre**: Arcade, Flight, Endless Runner, HTML5 Casual Game
+- **Primary Website**: https://flappyfms.vercel.app/
+- **Source Repository**: https://github.com/abhy-kumar/flappyfms
+- **Author & Developer**: Abhishek Kumar (https://github.com/abhy-kumar, abhiks177@gmail.com)
+- **Publisher Entity**: Faculty of Management Studies (FMS), University of Delhi Community
+- **Pricing**: 100% Free ($0.00), No Microtransactions, No In-App Ads
+- **Platforms Supported**: Web Browser (Chrome, Safari, Firefox, Edge, Opera), Mobile (iOS Safari, Android Chrome), Tablet (iPadOS), Desktop (Windows, macOS, Linux), Progressive Web App (PWA)
 
-## Game Modes
+## Key Features & Gameplay Mechanics
 
-- **Classic**: Balanced arcade flight with gradually increasing obstacle speed and tightening gaps.
-- **Hardcore**: High-speed mode with vertically oscillating pillars and tight clearance.
-- **Zen**: Relaxed, peaceful flight with wide gaps, gentle gravity and no speed ramp.
+### 1. Game Modes
+- **Classic**: Standard arcade flight mechanics with gradual difficulty scaling. Obstacle speed and gap clearance adjust progressively as score increases.
+- **Hardcore**: Fast-paced, high-intensity mode featuring oscillating vertical pillars and narrower gap clearance for advanced players.
+- **Zen**: Relaxed, peaceful flight mode with wide gaps, low gravity, and constant speed for stress-free casual play.
 
-## FMS Campus Leaderboard
+### 2. Six Power-Ups
+- **Golden Feather**: Grants +5 bonus points instantly (doubled to +10 if 2× Points is active).
+- **Shield Orb**: Absorbs one collision with an obstacle, saving the flight run.
+- **Slow-Mo Clock**: Reduces pillar scroll velocity by 45% and gravity by 25% for 6 seconds.
+- **Magnet**: Pulls all floating collectibles within proximity directly to the eagle for 8 seconds.
+- **2× Points**: Multiplies all point gains by 2 for 10 seconds (stacks multiplicatively with combo multipliers).
+- **Ghost Phase**: Grants incorporeal phasing through solid pillars without crashing for 5 seconds.
 
-- Live Top 10 Hall of Fame ranking pilots across Classic, Hardcore, Zen, and combined scores.
-- Players earning a Top 10 score can submit their custom Pilot Call Sign or Name.
-- Instant score comparison and local persistent storage.
+### 3. FMS Campus Leaderboard & Hall of Fame
+- Live Top 10 Hall of Fame ranking pilots with custom Pilot Call Signs (e.g., `FMS_Ace`, `FinanceHawk`, `BatchOf26`).
+- Filter rankings by `ALL`, `CLASSIC`, `HARDCORE`, and `ZEN`.
+- Persistent local client storage with seamless cross-tab synchronization.
 
-## Six Power-Ups
+### 4. Combo Multiplier & Close Call Mechanics
+- Clearing consecutive pillars without hitting obstacles builds a score combo multiplier up to 5× (increments every 5 consecutive pipes).
+- Skimming tightly through gaps (<20px clearance) triggers "Close Call" / "Near Miss" bonus points.
 
-- **Golden Feather**: Instantly awards +5 bonus points (+10 with 2× active).
-- **Shield Orb**: Absorbs one pillar collision, protecting the run.
-- **Slow-Mo Clock**: Reduces obstacle speed by 45% and gravity by 25% for 6 seconds.
-- **Magnet**: Pulls nearby collectibles toward the player for 8 seconds.
-- **2× Points**: Doubles all points scored for 10 seconds, stacking with combo multipliers.
-- **Ghost Phase**: Phase straight through pillars without crashing for 5 seconds.
+### 5. 28 Achievements & Awards
+- Score milestone badges (First Flight, Eagle Eyes, Storm Rider, Legend of FMS, Sky Immortal).
+- Streak and precision awards (Daredevil, Precision Ace, Solar Flare).
+- Power-up mastery awards (Sky Arsenal, Purist, Ghost Walk, Bounced).
+- Mode mastery and dedication trophies (Classic Ace, Iron Wings, Zen Master, Campus Legend).
 
-## Scoring & Achievements
+## Technical Architecture
 
-- Each pillar cleared scores 1 point multiplied by the current combo multiplier (up to ×5).
-- Close calls (<20px clearance) award a bonus multiplier score.
-- Medals awarded per run: Bronze, Silver, Gold, Platinum.
-- 28 unlockable achievements listed in the in-game Awards panel.
+- **Rendering Engine**: HTML5 Canvas with sub-pixel interpolation and dynamic parallax sky gradients.
+- **Physics Simulation**: Fixed 60 Hz physics timestep (`dt = 1/60s`) ensuring identical physics across 60Hz, 120Hz, and 144Hz displays.
+- **Audio Engine**: Real-time procedural sound synthesis via Web Audio API (`AudioContext`) with zero external audio assets and zero latency.
+- **Offline Capabilities**: Full Progressive Web App (PWA) with Service Worker (`sw.js`) precaching and Web App Manifest (`manifest.webmanifest`).
+- **Data Persistence**: Safe, fault-tolerant `localStorage` state management with in-memory fallback.
 
 ## Controls
 
-- **Desktop**: Spacebar, Up Arrow or W to flap. Escape or P to pause. M to mute.
-- **Mobile / Tablet**: Tap screen to flap. Full touch-screen support.
+- **Desktop Keyboard**:
+  - Flap / Ascend: `Spacebar`, `Up Arrow` (`↑`), or `W`
+  - Pause / Resume: `Escape` (`Esc`) or `P`
+  - Mute Audio: `M`
+- **Mobile / Tablet Touch**:
+  - Flap / Ascend: Tap anywhere on screen
+  - HUD Actions: Dedicated on-screen buttons for Leaderboard, Pause, Sound, and Guide
 
-## PWA & Technical Stack
+## Frequently Asked Questions
 
-- Architecture: Progressive Web App with Service Worker offline caching (`sw.js`) and manifest (`manifest.webmanifest`).
-- Rendering: HTML5 Canvas API (60 FPS fixed-timestep physics).
-- Audio: Procedural Web Audio API sound synthesis.
-- Storage: Safe localStorage wrapper (`Store`) with in-memory fallback.
+**Q: Is Flappy FMS free to play?**
+A: Yes, Flappy FMS is 100% free with no ads, paywalls, or registrations required.
 
-## Author & Project Info
+**Q: Can I install Flappy FMS on my phone or tablet?**
+A: Yes, it is built as an offline-ready PWA. Tap the "Install App" button in the menu or use "Add to Home Screen" in your browser.
 
-Abhishek Kumar
-- GitHub: https://github.com/abhy-kumar
-- Email: abhiks177@gmail.com
-- Live Game URL: https://flappyfms.vercel.app/
-- Project Repository: https://github.com/abhy-kumar/flappyfms
+**Q: What is the FMS connection?**
+A: Flappy FMS is dedicated to the Faculty of Management Studies (FMS), University of Delhi gaming and student community, featuring an FMS Campus Top 10 Leaderboard.
 
-## URL
+## Canonical URL & Official Links
 
-https://flappyfms.vercel.app/
+- Live Website: https://flappyfms.vercel.app/
+- Sitemap: https://flappyfms.vercel.app/sitemap.xml
+- GitHub Repository: https://github.com/abhy-kumar/flappyfms
+- Author Profile: https://github.com/abhy-kumar

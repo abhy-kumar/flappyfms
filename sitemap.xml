@@ -1,14 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-          http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+          http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd
+          http://www.google.com/schemas/sitemap-image/1.1
+          http://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd">
 
   <url>
     <loc>https://flappyfms.vercel.app/</loc>
     <lastmod>2026-08-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://flappyfms.vercel.app/og-image.png</image:loc>
+      <image:title>Flappy FMS – Free Online Arcade Flight Game Banner</image:title>
+      <image:caption>Flappy FMS official game poster featuring the red eagle, neon obstacles, and campus leaderboard.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://flappyfms.vercel.app/bird.png</image:loc>
+      <image:title>Flappy FMS Red Eagle Pilot Mascot</image:title>
+      <image:caption>The signature red eagle player sprite for Flappy FMS.</image:caption>
+    </image:image>
   </url>
 
 </urlset>

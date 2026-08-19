@@ -1,5 +1,6 @@
 {
-  "name": "Flappy FMS – Arcade Flight Game",
+  "id": "https://flappyfms.vercel.app/",
+  "name": "Flappy FMS - Arcade Flight Game",
   "short_name": "Flappy FMS",
   "description": "Fly a red eagle through neon pillars in Flappy FMS. 3 game modes, 6 power-ups, campus leaderboard, medals and achievements.",
   "start_url": "./index.html",
@@ -8,7 +9,7 @@
   "orientation": "any",
   "background_color": "#0d1321",
   "theme_color": "#c0262d",
-  "categories": ["games", "arcade"],
+  "categories": ["games", "arcade", "casual"],
   "icons": [
     {
       "src": "bird.png",
@@ -27,6 +28,15 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Flappy FMS Neon Arcade Flight Gameplay"
     }
   ]
 }
