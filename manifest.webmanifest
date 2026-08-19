@@ -1,0 +1,32 @@
+{
+  "name": "Flappy FMS – Arcade Flight Game",
+  "short_name": "Flappy FMS",
+  "description": "Fly a red eagle through neon pillars in Flappy FMS. 3 game modes, 6 power-ups, campus leaderboard, medals and achievements.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d1321",
+  "theme_color": "#c0262d",
+  "categories": ["games", "arcade"],
+  "icons": [
+    {
+      "src": "bird.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "bird.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "bird.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

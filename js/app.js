@@ -1,10 +1,8 @@
 /* ==========================================================================
-   APP CONTROLLER - FLAPPY FMS
+   APP CONTROLLER - FLAPPY FMS (v2.0)
    --------------------------------------------------------------------------
-   Owns every DOM concern: input routing, modal stack, HUD, toasts, settings.
-   The engine no longer binds input itself, which is what let the old build
-   flap (and even start a run) while a modal was open, and fire two flaps per
-   mouse click because both `click` and `pointerdown` were wired up.
+   Owns DOM concern: input routing, modal stack, HUD, toasts, settings,
+   FMS Campus Leaderboard, Top 10 Pilot Name Entry, and PWA Installation.
    ========================================================================== */
 
 (function () {
@@ -32,6 +30,7 @@
     const pauseBtn = $('pause-toggle');
     const soundBtn = $('sound-toggle');
     const helpBtn = $('help-toggle');
+    const leaderBtn = $('leaderboard-toggle');
 
     const tapHint = $('tap-hint');
     const pillBar = $('powerup-status-bar');
@@ -39,6 +38,8 @@
     const modals = {
       menu: $('menu-modal'),
       gameover: $('gameover-modal'),
+      entry: $('leaderboard-entry-modal'),
+      leaderboard: $('leaderboard-modal'),
       help: $('help-modal'),
       settings: $('settings-modal'),
       achievements: $('achievements-modal'),
@@ -70,8 +71,6 @@
       el.removeAttribute('inert');
       const focusTarget = el.querySelector('[data-autofocus]') || el.querySelector('button, [href], input, select');
       if (focusTarget) {
-        // Small delay so a key still being held cannot immediately re-trigger
-        // the freshly focused button (e.g. holding SPACE into the game-over card).
         setTimeout(() => { try { focusTarget.focus({ preventScroll: true }); } catch (e) {} },
           (opts && opts.focusDelay) || 60);
       }
@@ -95,8 +94,6 @@
 
     function closeAll() { stack.slice().reverse().forEach(closeModal); }
 
-    /* Hidden modals used to keep their buttons in the tab order because they
-       were only opacity:0. Everything not on top is inert. */
     function updateInert() {
       Object.keys(modals).forEach(name => {
         const el = modals[name];
@@ -156,7 +153,7 @@
         renderModeCards();
       },
 
-      gameover(d) { showGameOver(d); }
+      gameover(d) { handleGameOverFlow(d); }
     };
 
     const game = new FlappyGame(canvas, (type, data) => {
@@ -165,12 +162,9 @@
     });
 
     /* ------------------------------------------------------------------ */
-    /*  INPUT                                                              */
+    /*  INPUT ROUTING                                                      */
     /* ------------------------------------------------------------------ */
 
-    // One flap per gesture. `pointerdown` alone covers mouse, touch and pen —
-    // the previous build also listened for `click`, which fires after
-    // pointerdown on desktop and produced a double-strength flap.
     canvas.addEventListener('pointerdown', (e) => {
       if (anyOpen()) return;
       e.preventDefault();
@@ -179,7 +173,6 @@
       game.handleFlap();
     }, { passive: false });
 
-    // Suppress the ghost click / context menu that follows a touch.
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
     const FLAP_KEYS = ['Space', 'ArrowUp', 'KeyW'];
@@ -187,12 +180,14 @@
     window.addEventListener('keydown', (e) => {
       if (e.repeat && FLAP_KEYS.indexOf(e.code) !== -1) { e.preventDefault(); return; }
 
-      // Escape / P — pause, or back out of the top modal.
+      // Escape / P — pause, or close modal
       if (e.code === 'Escape' || e.code === 'KeyP') {
         e.preventDefault();
         const t = top();
         if (t === 'pause') { resumeGame(); return; }
-        if (t === 'help' || t === 'settings' || t === 'achievements') { sounds.playClick(); closeModal(t); return; }
+        if (t === 'help' || t === 'settings' || t === 'achievements' || t === 'leaderboard') {
+          sounds.playClick(); closeModal(t); return;
+        }
         if (!anyOpen()) pauseGame();
         return;
       }
@@ -200,15 +195,15 @@
       if (e.code === 'KeyM' && !anyOpen()) { e.preventDefault(); toggleSound(); return; }
 
       if (FLAP_KEYS.indexOf(e.code) !== -1) {
-        e.preventDefault();               // stop the page scrolling on SPACE
-        if (anyOpen()) return;            // never flap behind an open modal
+        e.preventDefault();
+        if (anyOpen()) return;
         sounds.init();
         hideTapHint();
         game.handleFlap();
       }
     });
 
-    // Keep focus trapped inside the visible modal.
+    // Modal focus trap
     window.addEventListener('keydown', (e) => {
       if (e.code !== 'Tab' || !anyOpen()) return;
       const el = modals[top()];
@@ -222,13 +217,11 @@
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     });
 
-    // Auto-pause when the tab or window loses focus — no more returning to a
-    // dead run because the bird kept falling in the background.
     document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
     window.addEventListener('blur', () => pauseGame());
 
     /* ------------------------------------------------------------------ */
-    /*  FLOW                                                               */
+    /*  GAME FLOW                                                          */
     /* ------------------------------------------------------------------ */
 
     function startGame() {
@@ -257,7 +250,7 @@
     }
 
     /* ------------------------------------------------------------------ */
-    /*  HUD                                                                */
+    /*  HUD & PILLS                                                        */
     /* ------------------------------------------------------------------ */
 
     function showTapHint() { tapHint.classList.add('visible'); }
@@ -271,8 +264,6 @@
       ghost:  { icon: '<i class="fa-solid fa-ghost"></i>',         label: 'GHOST' }
     };
 
-    // Pills are built once and updated by event, replacing the old
-    // setInterval(…, 250) polling loop.
     const pills = {};
     Object.keys(PILL_META).forEach(key => {
       const el = document.createElement('div');
@@ -281,9 +272,9 @@
       el.innerHTML =
         `<span class="pill-icon" aria-hidden="true">${PILL_META[key].icon}</span>` +
         `<span class="pill-label">${PILL_META[key].label}</span>` +
-        `<span class="pill-timer"><i></i></span>`;
+        `<span class="pill-timer"><span class="pill-timer-bar"></span></span>`;
       pillBar.appendChild(el);
-      pills[key] = { el, bar: el.querySelector('.pill-timer i') };
+      pills[key] = { el, bar: el.querySelector('.pill-timer-bar') };
     });
 
     function renderPills(state) {
@@ -328,7 +319,7 @@
     }
 
     /* ------------------------------------------------------------------ */
-    /*  GAME OVER                                                          */
+    /*  GAME OVER & LEADERBOARD ENTRY FLOW                                 */
     /* ------------------------------------------------------------------ */
 
     const MEDAL_META = {
@@ -340,9 +331,42 @@
 
     let lastResult = null;
 
-    function showGameOver(d) {
+    function handleGameOverFlow(d) {
       lastResult = d;
+      const topCheck = Leaderboard.checkTop10(d.score, d.mode);
 
+      if (topCheck.qualifies) {
+        $('entry-rank-text').textContent = `You earned Rank #${topCheck.rank} in ${d.modeLabel}!`;
+        const savedName = Settings.get('pilotName') || 'FMS_Pilot';
+        $('pilot-name-input').value = savedName;
+        openModal('entry', { focusDelay: 100 });
+      } else {
+        showGameOver(d);
+      }
+    }
+
+    function saveLeaderboardEntry() {
+      const input = $('pilot-name-input');
+      const name = (input.value || Settings.get('pilotName') || 'FMS_Pilot').trim().slice(0, 18);
+      Settings.set('pilotName', name);
+
+      if (lastResult) {
+        Leaderboard.addEntry({
+          name: name,
+          score: lastResult.score,
+          mode: lastResult.mode,
+          medal: lastResult.medal
+        });
+        game.unlock('top_pilot');
+        queueToast('<i class="fa-solid fa-ranking-star"></i>', 'Spot Claimed!', `${name} is on the Campus Leaderboard`);
+      }
+
+      closeModal('entry');
+      showGameOver(lastResult);
+    }
+
+    function showGameOver(d) {
+      if (!d) return;
       $('final-score').textContent = d.score;
       $('final-highscore').textContent = d.best;
       $('final-distance').textContent = d.distance + 'm';
@@ -377,27 +401,94 @@
       for (const t of order) {
         if (d.score < tiers[t]) return `${tiers[t] - d.score} more for ${t.toUpperCase()}`;
       }
-      return 'Every medal earned in this mode';
+      return 'All medals earned in this mode!';
     }
 
     $('share-btn').addEventListener('click', async () => {
       sounds.playClick();
       if (!lastResult) return;
       const text = `I scored ${lastResult.score} in Flappy FMS (${lastResult.modeLabel})` +
-        (lastResult.medal ? ` and took the ${lastResult.medal} medal` : '') +
-        `. Beat it: https://abhy-kumar.github.io/flappyfms/`;
+        (lastResult.medal ? ` with the ${lastResult.medal.toUpperCase()} medal` : '') +
+        `! Beat my score on the FMS Campus Leaderboard: https://flappyfms.vercel.app/`;
       try {
         if (navigator.share) {
-          await navigator.share({ title: 'Flappy FMS', text });
+          await navigator.share({ title: 'Flappy FMS', text, url: 'https://flappyfms.vercel.app/' });
         } else {
           await navigator.clipboard.writeText(text);
           queueToast('<i class="fa-solid fa-clipboard-check"></i>', 'Copied!', 'Score copied to your clipboard');
         }
-      } catch (e) { /* user cancelled the share sheet */ }
+      } catch (e) { /* cancelled */ }
     });
 
     /* ------------------------------------------------------------------ */
-    /*  MODE CARDS & STATS                                                 */
+    /*  CAMPUS LEADERBOARD MODAL                                           */
+    /* ------------------------------------------------------------------ */
+
+    let currentLeaderTab = 'all';
+
+    function renderLeaderboard(filter = 'all') {
+      currentLeaderTab = filter;
+      const listEl = $('leaderboard-list');
+      listEl.innerHTML = '';
+
+      const entries = Leaderboard.getEntries(filter);
+
+      if (!entries.length) {
+        listEl.innerHTML = `<li class="leaderboard-empty">No scores registered in this mode yet. Be the first!</li>`;
+        return;
+      }
+
+      entries.forEach((entry, idx) => {
+        const rank = idx + 1;
+        let rankBadge = `<span class="lb-rank num">${rank}</span>`;
+        if (rank === 1) rankBadge = `<span class="lb-rank rank-1"><i class="fa-solid fa-crown"></i> 1</span>`;
+        else if (rank === 2) rankBadge = `<span class="lb-rank rank-2"><i class="fa-solid fa-medal"></i> 2</span>`;
+        else if (rank === 3) rankBadge = `<span class="lb-rank rank-3"><i class="fa-solid fa-award"></i> 3</span>`;
+
+        const isMe = entry.name === Settings.get('pilotName');
+        const li = document.createElement('li');
+        li.className = 'leaderboard-row' + (isMe ? ' current-player' : '');
+
+        let medalHtml = '';
+        if (entry.medal && MEDAL_META[entry.medal]) {
+          medalHtml = `<span class="lb-medal" title="${entry.medal.toUpperCase()} medal">${MEDAL_META[entry.medal].icon}</span>`;
+        }
+
+        li.innerHTML = `
+          ${rankBadge}
+          <div class="lb-pilot">
+            <strong>${escapeHtml(entry.name)}</strong>
+            <small>${entry.mode ? entry.mode.toUpperCase() : 'CLASSIC'} · ${entry.date || 'Campus'}</small>
+          </div>
+          <div class="lb-score-wrap">
+            ${medalHtml}
+            <span class="lb-score">${entry.score}</span>
+          </div>
+        `;
+        listEl.appendChild(li);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+    }
+
+    const leaderTabs = document.querySelectorAll('.tab-btn');
+    leaderTabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        sounds.playClick();
+        leaderTabs.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        renderLeaderboard(btn.dataset.tab);
+      });
+    });
+
+    /* ------------------------------------------------------------------ */
+    /*  MODE CARDS & LIFETIME STATS                                        */
     /* ------------------------------------------------------------------ */
 
     const modeBtns = document.querySelectorAll('.mode-btn');
@@ -408,7 +499,7 @@
         const mode = btn.dataset.mode;
         const on = mode === game.mode;
         btn.classList.toggle('active', on);
-        btn.setAttribute('aria-pressed', on ? 'true' : 'false');   // was never updated before
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
         const badge = btn.querySelector('.mode-best');
         if (badge) badge.textContent = 'BEST ' + (bests[mode] || 0);
       });
@@ -458,12 +549,14 @@
     /*  SETTINGS                                                           */
     /* ------------------------------------------------------------------ */
 
+    const pilotInput = $('opt-pilot');
     const volumeInput = $('opt-volume');
     const hapticsInput = $('opt-haptics');
     const shakeInput = $('opt-shake');
     const motionInput = $('opt-motion');
 
     function syncSettingsUI() {
+      pilotInput.value = Settings.get('pilotName') || 'FMS_Pilot';
       volumeInput.value = Math.round(Settings.get('volume') * 100);
       hapticsInput.checked = Settings.get('haptics');
       shakeInput.checked = Settings.get('shake');
@@ -473,6 +566,13 @@
       soundBtn.setAttribute('aria-pressed', sounds.muted ? 'true' : 'false');
       soundBtn.setAttribute('aria-label', sounds.muted ? 'Unmute sound' : 'Mute sound');
     }
+
+    pilotInput.addEventListener('change', () => {
+      const val = pilotInput.value.trim().slice(0, 18) || 'FMS_Pilot';
+      Settings.set('pilotName', val);
+      sounds.playClick();
+      queueToast('<i class="fa-solid fa-id-badge"></i>', 'Call Sign Updated', val);
+    });
 
     volumeInput.addEventListener('input', () => {
       sounds.init();
@@ -510,6 +610,41 @@
     }
 
     /* ------------------------------------------------------------------ */
+    /*  PWA INSTALL PROMPT                                                 */
+    /* ------------------------------------------------------------------ */
+
+    let deferredInstallPrompt = null;
+    const installBtn = $('menu-install');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      if (installBtn) installBtn.style.display = 'inline-flex';
+    });
+
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        sounds.playClick();
+        if (deferredInstallPrompt) {
+          deferredInstallPrompt.prompt();
+          const choice = await deferredInstallPrompt.userChoice;
+          if (choice.outcome === 'accepted') {
+            installBtn.style.display = 'none';
+            queueToast('<i class="fa-solid fa-check"></i>', 'App Installed!', 'Flappy FMS is on your home screen');
+          }
+          deferredInstallPrompt = null;
+        } else {
+          queueToast('<i class="fa-solid fa-mobile-screen"></i>', 'Install Tip', 'Use your browser menu -> Add to Home Screen');
+        }
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      if (installBtn) installBtn.style.display = 'none';
+      deferredInstallPrompt = null;
+    });
+
+    /* ------------------------------------------------------------------ */
     /*  BUTTON WIRING                                                      */
     /* ------------------------------------------------------------------ */
 
@@ -518,6 +653,9 @@
     wire('start-btn', () => { sounds.init(); sounds.playClick(); startGame(); });
     wire('restart-btn', () => { sounds.playClick(); startGame(); });
     wire('menu-btn', () => { sounds.playClick(); toMenu(); });
+
+    wire('entry-save-btn', () => { sounds.playClick(); saveLeaderboardEntry(); });
+    wire('entry-skip-btn', () => { sounds.playClick(); closeModal('entry'); showGameOver(lastResult); });
 
     wire('pause-resume', () => { sounds.playClick(); resumeGame(); });
     wire('pause-restart', () => { sounds.playClick(); startGame(); });
@@ -529,29 +667,50 @@
     });
     wire('sound-toggle', toggleSound);
     wire('help-toggle', () => { sounds.playClick(); openModal('help'); });
+    wire('leaderboard-toggle', () => {
+      sounds.playClick();
+      renderLeaderboard(currentLeaderTab);
+      openModal('leaderboard');
+    });
 
     wire('help-close', () => { sounds.playClick(); closeModal('help'); });
     wire('settings-close', () => { sounds.playClick(); closeModal('settings'); });
     wire('achievements-close', () => { sounds.playClick(); closeModal('achievements'); });
+    wire('leaderboard-close', () => { sounds.playClick(); closeModal('leaderboard'); });
 
     wire('menu-help', () => { sounds.playClick(); openModal('help'); });
     wire('menu-settings', () => { sounds.playClick(); syncSettingsUI(); openModal('settings'); });
     wire('menu-achievements', () => { sounds.playClick(); renderAchievements(); openModal('achievements'); });
-    wire('gameover-achievements', () => { sounds.playClick(); renderAchievements(); openModal('achievements'); });
+    wire('menu-leaderboard', () => {
+      sounds.playClick();
+      renderLeaderboard(currentLeaderTab);
+      openModal('leaderboard');
+    });
 
-    // Clicking the dimmed backdrop closes non-blocking dialogs.
-    ['help', 'settings', 'achievements'].forEach(name => {
-      modals[name].addEventListener('pointerdown', (e) => {
-        if (e.target === modals[name]) { sounds.playClick(); closeModal(name); }
-      });
+    wire('gameover-achievements', () => { sounds.playClick(); renderAchievements(); openModal('achievements'); });
+    wire('gameover-leaderboard', () => {
+      sounds.playClick();
+      renderLeaderboard(currentLeaderTab);
+      openModal('leaderboard');
+    });
+
+    // Close on dimmed backdrop click
+    ['help', 'settings', 'achievements', 'leaderboard', 'entry'].forEach(name => {
+      if (modals[name]) {
+        modals[name].addEventListener('pointerdown', (e) => {
+          if (e.target === modals[name]) {
+            sounds.playClick();
+            if (name === 'entry') { closeModal('entry'); showGameOver(lastResult); }
+            else closeModal(name);
+          }
+        });
+      }
     });
 
     /* ------------------------------------------------------------------ */
     /*  BOOT                                                               */
     /* ------------------------------------------------------------------ */
 
-    // Unlock audio on the very first gesture anywhere (capture phase, so it
-    // runs before the canvas handler that plays the first flap sound).
     ['pointerdown', 'keydown'].forEach(evt =>
       window.addEventListener(evt, () => sounds.init(), { once: true, capture: true }));
 
@@ -562,7 +721,6 @@
     hideTapHint();
     openModal('menu');
 
-    // Expose for debugging / the console.
-    window.FlappyFMS = { game, sounds, Store, Settings };
+    window.FlappyFMS = { game, sounds, Store, Settings, Leaderboard };
   });
 })();

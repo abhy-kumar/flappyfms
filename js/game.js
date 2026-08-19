@@ -935,26 +935,41 @@ class FlappyGame {
     this.emit('achievement', { id, title: def.title, desc: def.desc, icon: def.icon });
   }
 
-  /* Score-threshold checks use >= ranges, not exact equality. The old build
-     used milestones[score] so a +5 Golden Feather that jumped 8 -> 13 skipped
-     the "10" achievement entirely and it could never be earned again. */
+  /* Score-threshold checks use >= ranges, not exact equality. */
   checkRunAchievements() {
-    if (this.score >= 5) this.unlock('first_flight');
-    if (this.score >= 10) this.unlock('eagle_eyes');
-    if (this.score >= 25) this.unlock('storm_rider');
-    if (this.score >= 50) this.unlock('sky_sovereign');
+    if (this.score >= 5)   this.unlock('first_flight');
+    if (this.score >= 10)  this.unlock('eagle_eyes');
+    if (this.score >= 15)  this.unlock('silver_wings');
+    if (this.score >= 25)  this.unlock('storm_rider');
+    if (this.score >= 35)  this.unlock('cloud_runner');
+    if (this.score >= 50)  this.unlock('sky_sovereign');
+    if (this.score >= 75)  this.unlock('century_club');
     if (this.score >= 100) this.unlock('legend');
+    if (this.score >= 150) this.unlock('immortal');
+
+    if (this.combo >= 5)  this.unlock('combo_5');
     if (this.combo >= 10) this.unlock('combo_10');
     if (this.combo >= 25) this.unlock('combo_25');
+    if (this.combo >= 40) this.unlock('combo_40');
+
+    if (this.nearMisses >= 1)  this.unlock('close_call');
+    if (this.nearMisses >= 5)  this.unlock('daredevil');
+    if (this.nearMisses >= 10) this.unlock('edge_master');
+
     if (this.mode === 'hardcore' && this.score >= 20) this.unlock('hardcore_20');
-    if (this.mode === 'zen' && this.score >= 50) this.unlock('zen_master');
+    if (this.mode === 'zen' && this.score >= 50)      this.unlock('zen_master');
+    if (this.mode === 'classic' && this.score >= 40)  this.unlock('classic_ace');
+
     if (this.score >= 20 && this.powerupsCollected === 0) this.unlock('purist');
     if (this.ghostPasses >= 1) this.unlock('ghost_walk');
   }
 
   checkLifetimeAchievements(stats) {
+    if (stats.games >= 10) this.unlock('frequent_flyer');
     if (stats.games >= 25) this.unlock('persistent');
+    if (stats.games >= 100) this.unlock('veteran_pilot');
     if (stats.totalDistance >= 10000) this.unlock('marathon');
+    if (stats.totalDistance >= 25000) this.unlock('sky_nomad');
     const bests = this.bests;
     if (bests.classic > 0 && bests.hardcore > 0 && bests.zen > 0) this.unlock('all_modes');
   }
@@ -1403,21 +1418,41 @@ class FlappyGame {
    ACHIEVEMENT CATALOGUE
    -------------------------------------------------------------------------- */
 const ACHIEVEMENTS = [
-  { id: 'first_flight',  icon: '<i class="fa-solid fa-feather"></i>',         title: 'First Flight',   desc: 'Score 5 points in a single run' },
-  { id: 'eagle_eyes',    icon: '<i class="fa-solid fa-eye"></i>',             title: 'Eagle Eyes',     desc: 'Score 10 points in a single run' },
-  { id: 'storm_rider',   icon: '<i class="fa-solid fa-cloud-bolt"></i>',      title: 'Storm Rider',    desc: 'Score 25 points in a single run' },
-  { id: 'sky_sovereign', icon: '<i class="fa-solid fa-crown"></i>',           title: 'Sky Sovereign',  desc: 'Score 50 points in a single run' },
-  { id: 'legend',        icon: '<i class="fa-solid fa-trophy"></i>',          title: 'Legend of FMS',  desc: 'Score 100 points in a single run' },
-  { id: 'combo_10',      icon: '<i class="fa-solid fa-fire"></i>',            title: 'Heating Up',     desc: 'Reach a 10-pillar combo' },
-  { id: 'combo_25',      icon: '<i class="fa-solid fa-meteor"></i>',          title: 'Unbroken',       desc: 'Reach a 25-pillar combo' },
-  { id: 'daredevil',     icon: '<i class="fa-solid fa-bolt"></i>',            title: 'Daredevil',      desc: '5 close calls in one run' },
-  { id: 'collector',     icon: '<i class="fa-solid fa-gift"></i>',            title: 'Collector',      desc: 'Grab 5 power-ups in one run' },
-  { id: 'purist',        icon: '<i class="fa-solid fa-spa"></i>',             title: 'Purist',         desc: 'Reach 20 without any power-up' },
-  { id: 'shielded',      icon: '<i class="fa-solid fa-shield-halved"></i>',   title: 'Bounced',        desc: 'Survive a crash with a shield' },
-  { id: 'ghost_walk',    icon: '<i class="fa-solid fa-ghost"></i>',           title: 'Ghost Walk',     desc: 'Phase straight through a pillar' },
-  { id: 'hardcore_20',   icon: '<i class="fa-solid fa-skull"></i>',           title: 'Iron Wings',     desc: 'Score 20 in Hardcore mode' },
-  { id: 'zen_master',    icon: '<i class="fa-solid fa-moon"></i>',            title: 'Zen Master',     desc: 'Score 50 in Zen mode' },
-  { id: 'all_modes',     icon: '<i class="fa-solid fa-compass"></i>',         title: 'Well Travelled', desc: 'Set a score in all three modes' },
-  { id: 'persistent',    icon: '<i class="fa-solid fa-rotate-right"></i>',    title: 'Persistent',     desc: 'Play 25 runs' },
-  { id: 'marathon',      icon: '<i class="fa-solid fa-plane-departure"></i>', title: 'Marathon',       desc: 'Fly 10,000m in total' }
+  { id: 'first_flight',   icon: '<i class="fa-solid fa-feather"></i>',         title: 'First Flight',    desc: 'Score 5 points in a single run' },
+  { id: 'eagle_eyes',     icon: '<i class="fa-solid fa-eye"></i>',             title: 'Eagle Eyes',      desc: 'Score 10 points in a single run' },
+  { id: 'silver_wings',   icon: '<i class="fa-solid fa-wind"></i>',            title: 'Silver Wings',    desc: 'Score 15 points in a single run' },
+  { id: 'storm_rider',    icon: '<i class="fa-solid fa-cloud-bolt"></i>',      title: 'Storm Rider',     desc: 'Score 25 points in a single run' },
+  { id: 'cloud_runner',   icon: '<i class="fa-solid fa-cloud"></i>',           title: 'Cloud Runner',    desc: 'Score 35 points in a single run' },
+  { id: 'sky_sovereign',  icon: '<i class="fa-solid fa-crown"></i>',           title: 'Sky Sovereign',   desc: 'Score 50 points in a single run' },
+  { id: 'century_club',   icon: '<i class="fa-solid fa-award"></i>',           title: 'Century Club',    desc: 'Score 75 points in a single run' },
+  { id: 'legend',         icon: '<i class="fa-solid fa-trophy"></i>',          title: 'Legend of FMS',   desc: 'Score 100 points in a single run' },
+  { id: 'immortal',       icon: '<i class="fa-solid fa-infinity"></i>',        title: 'Sky Immortal',    desc: 'Score 150 points in a single run' },
+
+  { id: 'combo_5',        icon: '<i class="fa-solid fa-bolt-lightning"></i>',  title: 'Spark',           desc: 'Reach a 5-pillar combo' },
+  { id: 'combo_10',       icon: '<i class="fa-solid fa-fire"></i>',            title: 'Heating Up',      desc: 'Reach a 10-pillar combo' },
+  { id: 'combo_25',       icon: '<i class="fa-solid fa-meteor"></i>',          title: 'Unbroken',        desc: 'Reach a 25-pillar combo' },
+  { id: 'combo_40',       icon: '<i class="fa-solid fa-fire-flame-curved"></i>', title: 'Solar Flare',    desc: 'Reach a 40-pillar combo' },
+
+  { id: 'close_call',     icon: '<i class="fa-solid fa-angles-right"></i>',    title: 'Razor Edge',      desc: 'Execute a close call near a pillar' },
+  { id: 'daredevil',      icon: '<i class="fa-solid fa-bolt"></i>',            title: 'Daredevil',       desc: '5 close calls in one run' },
+  { id: 'edge_master',    icon: '<i class="fa-solid fa-crosshairs"></i>',      title: 'Precision Ace',   desc: '10 close calls in one run' },
+
+  { id: 'first_pickup',   icon: '<i class="fa-solid fa-star"></i>',            title: 'First Pickup',    desc: 'Collect your first power-up' },
+  { id: 'collector',      icon: '<i class="fa-solid fa-gift"></i>',            title: 'Collector',       desc: 'Grab 5 power-ups in one run' },
+  { id: 'arsenal',        icon: '<i class="fa-solid fa-boxes-stacked"></i>',   title: 'Sky Arsenal',     desc: 'Grab 10 power-ups in one run' },
+  { id: 'purist',         icon: '<i class="fa-solid fa-spa"></i>',             title: 'Purist',          desc: 'Reach 20 without any power-ups' },
+
+  { id: 'shielded',       icon: '<i class="fa-solid fa-shield-halved"></i>',   title: 'Bounced',         desc: 'Survive a crash with a shield' },
+  { id: 'ghost_walk',     icon: '<i class="fa-solid fa-ghost"></i>',           title: 'Ghost Walk',      desc: 'Phase straight through a pillar' },
+  { id: 'classic_ace',    icon: '<i class="fa-solid fa-medal"></i>',           title: 'Classic Ace',     desc: 'Score 40 in Classic mode' },
+  { id: 'hardcore_20',    icon: '<i class="fa-solid fa-skull"></i>',           title: 'Iron Wings',      desc: 'Score 20 in Hardcore mode' },
+  { id: 'zen_master',     icon: '<i class="fa-solid fa-moon"></i>',            title: 'Zen Master',      desc: 'Score 50 in Zen mode' },
+  { id: 'all_modes',      icon: '<i class="fa-solid fa-compass"></i>',         title: 'Well Travelled',  desc: 'Set a score in all three modes' },
+
+  { id: 'top_pilot',      icon: '<i class="fa-solid fa-ranking-star"></i>',    title: 'Campus Legend',   desc: 'Enter the FMS Top 10 Leaderboard' },
+  { id: 'frequent_flyer', icon: '<i class="fa-solid fa-plane"></i>',           title: 'Frequent Flyer',  desc: 'Play 10 runs' },
+  { id: 'persistent',     icon: '<i class="fa-solid fa-rotate-right"></i>',    title: 'Persistent',      desc: 'Play 25 runs' },
+  { id: 'veteran_pilot',  icon: '<i class="fa-solid fa-user-astronaut"></i>',  title: 'Veteran Aviator', desc: 'Play 100 total runs' },
+  { id: 'marathon',       icon: '<i class="fa-solid fa-plane-departure"></i>', title: 'Marathon',        desc: 'Fly 10,000m in total' },
+  { id: 'sky_nomad',      icon: '<i class="fa-solid fa-globe"></i>',           title: 'Sky Nomad',       desc: 'Fly 25,000m in total' }
 ];

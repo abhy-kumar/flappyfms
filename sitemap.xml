@@ -5,9 +5,9 @@
           http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
   <url>
-    <loc>https://abhy-kumar.github.io/flappyfms/</loc>
+    <loc>https://flappyfms.vercel.app/</loc>
     <lastmod>2026-08-19</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 

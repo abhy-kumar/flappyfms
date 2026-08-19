@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://abhy-kumar.github.io/flappyfms/sitemap.xml
+Sitemap: https://flappyfms.vercel.app/sitemap.xml

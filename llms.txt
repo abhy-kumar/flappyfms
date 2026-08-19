@@ -1,55 +1,59 @@
 # Flappy FMS
 
-> Flappy FMS (formerly Flappy Eagle) is a free online arcade browser game where players pilot a red eagle through neon-lit pillar obstacles. No download or sign-up required — play instantly in any modern web browser.
+> Flappy FMS is a free online arcade flight game designed for the Faculty of Management Studies (FMS) community and web gamers. Players pilot a red eagle through neon-lit obstacles. No download or sign-up required — play instantly in any web browser or install as a Progressive Web App (PWA).
 
 ## About
 
-Flappy FMS is a HTML5 Canvas game built with Vanilla JavaScript, CSS3 and the Web Audio API. It features three game modes, six collectible power-ups, a combo multiplier system, medals, achievements, parallax sky backgrounds, and per-mode high scores stored in the browser's localStorage. The simulation runs on a fixed 60 Hz timestep so physics behave identically on 60 Hz, 120 Hz and 144 Hz displays.
+Flappy FMS is built with pure HTML5 Canvas, Vanilla JavaScript, CSS3 and the Web Audio API. It features three game modes, six collectible power-ups, an FMS Campus Top 10 Leaderboard with pilot name entry, combo multipliers, medals, 28 achievements, parallax sky backgrounds, and per-mode high scores. The simulation runs on a fixed 60 Hz timestep so physics behave consistently across 60 Hz, 120 Hz and 144 Hz displays.
 
 ## Game Modes
 
-- **Classic**: Standard Flappy-style gameplay. Pillar speed rises and gaps tighten gradually up to a score of 40, then hold steady.
-- **Hardcore**: Fast-paced mode with vertically moving pillars and tighter gaps that ramp faster. For experienced players.
-- **Zen**: Relaxed mode with wider gaps and gentle gravity, and no difficulty ramp at all. Great for casual play.
+- **Classic**: Balanced arcade flight with gradually increasing obstacle speed and tightening gaps.
+- **Hardcore**: High-speed mode with vertically oscillating pillars and tight clearance.
+- **Zen**: Relaxed, peaceful flight with wide gaps, gentle gravity and no speed ramp.
 
-## Power-Ups
+## FMS Campus Leaderboard
 
-- **Golden Feather** — Instantly awards +5 bonus points.
-- **Shield Orb** — Absorbs one pillar collision, granting an extra life.
-- **Slow-Mo Clock** — Reduces game speed by 45% and gravity by 25% for 6 seconds.
-- **Magnet** — Pulls nearby power-ups toward the player for 8 seconds.
-- **2× Points** — Doubles all points scored for 10 seconds, stacking with the combo multiplier.
-- **Ghost** — Phase straight through pillars without crashing for 5 seconds.
+- Live Top 10 Hall of Fame ranking pilots across Classic, Hardcore, Zen, and combined scores.
+- Players earning a Top 10 score can submit their custom Pilot Call Sign or Name.
+- Instant score comparison and local persistent storage.
 
-## Scoring
+## Six Power-Ups
 
-- Each pillar cleared scores 1 point multiplied by the current combo multiplier.
-- Every 5 consecutive pillars raises the multiplier by one, up to a maximum of ×5.
-- Clearing a gap with less than 20px of clearance is a "close call" and awards a bonus of 2 × multiplier.
-- Medals are awarded per run and per mode: Bronze, Silver, Gold and Platinum.
-- 17 achievements unlock permanently and are listed in the in-game Awards panel.
+- **Golden Feather**: Instantly awards +5 bonus points (+10 with 2× active).
+- **Shield Orb**: Absorbs one pillar collision, protecting the run.
+- **Slow-Mo Clock**: Reduces obstacle speed by 45% and gravity by 25% for 6 seconds.
+- **Magnet**: Pulls nearby collectibles toward the player for 8 seconds.
+- **2× Points**: Doubles all points scored for 10 seconds, stacking with combo multipliers.
+- **Ghost Phase**: Phase straight through pillars without crashing for 5 seconds.
+
+## Scoring & Achievements
+
+- Each pillar cleared scores 1 point multiplied by the current combo multiplier (up to ×5).
+- Close calls (<20px clearance) award a bonus multiplier score.
+- Medals awarded per run: Bronze, Silver, Gold, Platinum.
+- 28 unlockable achievements listed in the in-game Awards panel.
 
 ## Controls
 
 - **Desktop**: Spacebar, Up Arrow or W to flap. Escape or P to pause. M to mute.
-- **Mobile / Tablet**: Tap or click the screen to flap.
+- **Mobile / Tablet**: Tap screen to flap. Full touch-screen support.
 
-## Technical Stack
+## PWA & Technical Stack
 
-- Language: JavaScript (Vanilla, no frameworks)
-- Rendering: HTML5 Canvas API, variable-rate render over a fixed 60 Hz simulation
-- Audio: Web Audio API (procedural synthesis — zero external audio files)
-- Styling: CSS3 with custom properties and glassmorphism design
-- Storage: Browser localStorage with an in-memory fallback for private browsing
-- Accessibility: focus trapping in dialogs, reduced-motion and screen-shake settings, full keyboard control
+- Architecture: Progressive Web App with Service Worker offline caching (`sw.js`) and manifest (`manifest.webmanifest`).
+- Rendering: HTML5 Canvas API (60 FPS fixed-timestep physics).
+- Audio: Procedural Web Audio API sound synthesis.
+- Storage: Safe localStorage wrapper (`Store`) with in-memory fallback.
 
-## Author
+## Author & Project Info
 
 Abhishek Kumar
 - GitHub: https://github.com/abhy-kumar
 - Email: abhiks177@gmail.com
+- Live Game URL: https://flappyfms.vercel.app/
 - Project Repository: https://github.com/abhy-kumar/flappyfms
 
 ## URL
 
-https://abhy-kumar.github.io/flappyfms/
+https://flappyfms.vercel.app/
