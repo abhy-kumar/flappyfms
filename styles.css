@@ -305,8 +305,8 @@ body {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: 28px 22px;
-  width: min(94vw, 440px);
-  max-width: 440px;
+  width: min(94vw, 400px);
+  max-width: 400px;
   text-align: center;
   box-shadow: var(--shadow-glow);
   display: flex;
@@ -475,23 +475,21 @@ button > * {
 
 .btn-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  gap: 7px;
   width: 100%;
   margin-top: 9px;
 }
 
 .btn-ghost {
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 38px;
-  padding: 8px 4px;
+  flex: 1;
+  min-height: 40px;
+  padding: 9px 5px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-muted);
-  font-size: clamp(0.56rem, 2.1vw, 0.66rem);
+  font-size: clamp(0.58rem, 2.3vw, 0.68rem);
   font-weight: 800;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.35px;
   white-space: nowrap;
 }
 .btn-ghost:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.28); }
