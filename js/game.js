@@ -106,79 +106,98 @@ function mixColor(c1, c2, t) {
   return `rgba(${r},${g},${bl},${alpha.toFixed(3)})`;
 }
 
-/* Sky palettes — 6 progressive atmospheric stages smoothly interpolated across high scores */
+/* Sky palettes — 6 progressive atmospheric stages smoothly interpolated across high scores.
+   Inspired by Alto's Odyssey & Journey: calming warm dusk → midnight → dawn progression */
 const SKIES = [
-  // 1. Stage 0 (0-50): Deep Cyber Midnight (rich indigo, cyan horizon, silver moon)
+  // 1. Stage 0 (0-50): Soft Indigo Night — gentle starlit sky, silver moon, calm deep blue
   {
     at: 0,
-    top: '#050814', mid: '#0c1626', bot: '#15243b',
-    star: 0.95,
-    mountainFar: '#08101e',
-    skylineMid: '#0e1a2f',
-    hillNear: '#12233f',
-    moonColor: '#f1f5f9',
-    moonGlow: 'rgba(0, 242, 254, 0.30)',
-    aurora: 'rgba(0, 242, 254, 0.10)'
+    top: '#0d0d2b', mid: '#1a1a4e', bot: '#2d2b6e',
+    star: 1.0,
+    mountainFar: '#151532',
+    skylineMid: '#1e1c45',
+    hillNear: '#252358',
+    waterTop: 'rgba(30,28,80,0.85)',
+    waterBot: 'rgba(13,13,43,0.95)',
+    moonColor: '#f0f4ff',
+    moonGlow: 'rgba(180,190,255,0.35)',
+    aurora: 'rgba(130,140,255,0.10)',
+    cloudTint: 'rgba(120,130,200,0.10)'
   },
-  // 2. Stage 50 (50-150): Cyber Dusk & Crimson Twilight (amber/wine sunset, warm solar glow)
+  // 2. Stage 50 (50-150): Warm Dusk Amber — honey glow on the horizon, rose sky
   {
     at: 50,
-    top: '#180309', mid: '#380e1a', bot: '#5c1724',
-    star: 0.70,
-    mountainFar: '#1c050c',
-    skylineMid: '#2d0a15',
-    hillNear: '#420f1e',
-    moonColor: '#ffe8d6',
-    moonGlow: 'rgba(255, 143, 0, 0.35)',
-    aurora: 'rgba(255, 90, 120, 0.14)'
+    top: '#1a0d2e', mid: '#3d1f1f', bot: '#6b3030',
+    star: 0.65,
+    mountainFar: '#1f1020',
+    skylineMid: '#311620',
+    hillNear: '#472030',
+    waterTop: 'rgba(80,35,40,0.80)',
+    waterBot: 'rgba(30,12,20,0.95)',
+    moonColor: '#ffd6b0',
+    moonGlow: 'rgba(255,180,80,0.35)',
+    aurora: 'rgba(255,140,100,0.12)',
+    cloudTint: 'rgba(200,140,100,0.12)'
   },
-  // 3. Stage 150 (150-350): Synthwave Neon Violet & Electric Magenta
+  // 3. Stage 150 (150-350): Golden Twilight — warm amber and rose, soft brushstroke hills
   {
     at: 150,
-    top: '#0c031c', mid: '#220938', bot: '#4a1058',
-    star: 0.85,
-    mountainFar: '#120422',
-    skylineMid: '#200835',
-    hillNear: '#320d4f',
-    moonColor: '#f3e8ff',
-    moonGlow: 'rgba(168, 85, 247, 0.40)',
-    aurora: 'rgba(217, 70, 239, 0.18)'
+    top: '#0e0820', mid: '#2a1535', bot: '#55306e',
+    star: 0.80,
+    mountainFar: '#190d28',
+    skylineMid: '#281440',
+    hillNear: '#3d1e5a',
+    waterTop: 'rgba(60,30,85,0.80)',
+    waterBot: 'rgba(18,10,35,0.95)',
+    moonColor: '#ffe8f0',
+    moonGlow: 'rgba(220,130,200,0.35)',
+    aurora: 'rgba(200,100,220,0.13)',
+    cloudTint: 'rgba(180,120,200,0.12)'
   },
-  // 4. Stage 350 (350-650): Deep Nebula Emerald & Northern Lights
+  // 4. Stage 350 (350-650): Deep Peacock Night — teal & blue-green calm
   {
     at: 350,
-    top: '#020d14', mid: '#041e24', bot: '#083a3f',
-    star: 1.00,
-    mountainFar: '#031217',
-    skylineMid: '#062228',
-    hillNear: '#0a3239',
-    moonColor: '#d1fae5',
-    moonGlow: 'rgba(16, 185, 129, 0.40)',
-    aurora: 'rgba(52, 211, 153, 0.22)'
+    top: '#041218', mid: '#072535', bot: '#0c3d50',
+    star: 1.0,
+    mountainFar: '#051820',
+    skylineMid: '#082d3e',
+    hillNear: '#0b3d52',
+    waterTop: 'rgba(10,50,65,0.80)',
+    waterBot: 'rgba(4,18,24,0.95)',
+    moonColor: '#d4f7ed',
+    moonGlow: 'rgba(60,200,170,0.32)',
+    aurora: 'rgba(40,200,160,0.13)',
+    cloudTint: 'rgba(60,160,150,0.10)'
   },
-  // 5. Stage 650 (650-1000): Solar Eclipse & Golden Starlight
+  // 5. Stage 650 (650-1000): Sunrise Rose — first light, coral & peach above dark mountains
   {
     at: 650,
-    top: '#080410', mid: '#1c0e05', bot: '#3a1f06',
-    star: 1.00,
-    mountainFar: '#100703',
-    skylineMid: '#200e05',
-    hillNear: '#321708',
-    moonColor: '#fef3c7',
-    moonGlow: 'rgba(255, 215, 0, 0.50)',
-    aurora: 'rgba(251, 191, 36, 0.28)'
+    top: '#100610', mid: '#28101e', bot: '#4e2040',
+    star: 0.55,
+    mountainFar: '#180a18',
+    skylineMid: '#28102a',
+    hillNear: '#3e183e',
+    waterTop: 'rgba(65,25,60,0.80)',
+    waterBot: 'rgba(18,8,20,0.95)',
+    moonColor: '#fff0e8',
+    moonGlow: 'rgba(255,200,150,0.45)',
+    aurora: 'rgba(255,160,120,0.18)',
+    cloudTint: 'rgba(220,160,140,0.13)'
   },
-  // 6. Stage 1000+ (1000+): Cosmic Ascendant & Hyperdrive Violet-Gold
+  // 6. Stage 1000+: Clear Pre-Dawn — deep violet fades to soft pearl horizon
   {
     at: 1000,
-    top: '#020208', mid: '#0f0822', bot: '#281144',
-    star: 1.00,
-    mountainFar: '#0a0518',
-    skylineMid: '#180c30',
-    hillNear: '#261248',
+    top: '#08051a', mid: '#140e3a', bot: '#261a5e',
+    star: 1.0,
+    mountainFar: '#0d0a22',
+    skylineMid: '#18123a',
+    hillNear: '#221a50',
+    waterTop: 'rgba(30,22,80,0.80)',
+    waterBot: 'rgba(8,5,26,0.95)',
     moonColor: '#ffffff',
-    moonGlow: 'rgba(0, 242, 254, 0.60)',
-    aurora: 'rgba(168, 85, 247, 0.35)'
+    moonGlow: 'rgba(200,180,255,0.50)',
+    aurora: 'rgba(160,140,255,0.18)',
+    cloudTint: 'rgba(160,150,230,0.12)'
   }
 ];
 
@@ -1223,9 +1242,12 @@ class FlappyGame {
       mountainFar: mixColor(a.mountainFar, b.mountainFar, t),
       skylineMid: mixColor(a.skylineMid, b.skylineMid, t),
       hillNear: mixColor(a.hillNear, b.hillNear, t),
+      waterTop: mixColor(a.waterTop || a.hillNear, b.waterTop || b.hillNear, t),
+      waterBot: mixColor(a.waterBot || a.mountainFar, b.waterBot || b.mountainFar, t),
       moonColor: mixColor(a.moonColor, b.moonColor, t),
       moonGlow: mixColor(a.moonGlow, b.moonGlow, t),
       aurora: mixColor(a.aurora, b.aurora, t),
+      cloudTint: mixColor(a.cloudTint || 'rgba(255,255,255,0.08)', b.cloudTint || 'rgba(255,255,255,0.08)', t),
       star: lerp(a.star, b.star, t)
     };
   }
@@ -1236,32 +1258,40 @@ class FlappyGame {
     const reduced = Settings.get('reducedMotion');
     const w = this.width;
     const h = this.height;
+    const t = this.frameCount;
 
-    // 1. Deep Atmospheric Gradient Sky
+    // ── 1. Deep atmospheric sky gradient (3-stop) ──────────────────────────
     const sky = ctx.createLinearGradient(0, 0, 0, h);
     sky.addColorStop(0, c.top);
-    sky.addColorStop(0.55, c.mid);
+    sky.addColorStop(0.5, c.mid);
     sky.addColorStop(1, c.bot);
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, w, h);
 
-    // 2. Fluid Aurora Ribbon Shimmer
+    // ── 2. Soft atmospheric horizon glow (makes horizon feel warm & deep) ──
+    if (!reduced) {
+      const horizonY = this.groundY * 0.82;
+      const hGrad = ctx.createRadialGradient(w * 0.5, horizonY, 0, w * 0.5, horizonY, w * 0.65);
+      hGrad.addColorStop(0, c.aurora.replace('0.1', '0.08').replace('0.13', '0.06').replace('0.18', '0.07'));
+      hGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = hGrad;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    // ── 3. Gentle aurora / sky wash (slow undulating ribbon) ───────────────
     if (!reduced) {
       ctx.save();
-      const wave1 = Math.sin(this.auroraPhase) * 16;
-      const wave2 = Math.cos(this.auroraPhase * 0.8) * 12;
-      const auroraGrad = ctx.createLinearGradient(0, 0, w, h * 0.45);
-      auroraGrad.addColorStop(0, 'rgba(0,0,0,0)');
-      auroraGrad.addColorStop(0.5, c.aurora);
-      auroraGrad.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = auroraGrad;
+      ctx.globalAlpha = 0.55;
+      const a1 = Math.sin(this.auroraPhase * 0.7) * 0.04 * h;
+      const a2 = Math.cos(this.auroraPhase * 0.5) * 0.03 * h;
+      const aGrad = ctx.createLinearGradient(0, 0, 0, h * 0.5);
+      aGrad.addColorStop(0, 'rgba(0,0,0,0)');
+      aGrad.addColorStop(0.45, c.aurora);
+      aGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = aGrad;
       ctx.beginPath();
-      ctx.moveTo(0, h * 0.16 + wave1);
-      ctx.bezierCurveTo(
-        w * 0.35, h * 0.06 + wave2,
-        w * 0.65, h * 0.26 - wave1,
-        w, h * 0.10 + wave2
-      );
+      ctx.moveTo(0, h * 0.12 + a1);
+      ctx.bezierCurveTo(w * 0.3, h * 0.05 + a2, w * 0.7, h * 0.20 - a1, w, h * 0.10 + a2);
       ctx.lineTo(w, 0);
       ctx.lineTo(0, 0);
       ctx.closePath();
@@ -1269,106 +1299,127 @@ class FlappyGame {
       ctx.restore();
     }
 
-    // 3. Cyber Moon / Celestial Body with Glowing Corona
+    // ── 4. Moon — soft, calm, with gentle corona ───────────────────────────
     const moonX = w * 0.78;
-    const moonY = Math.min(130, h * 0.18);
-    const moonR = Math.min(32, w * 0.065);
+    const moonY = Math.min(h * 0.19, 120);
+    const moonR  = Math.min(28, w * 0.055);
 
-    const corona = ctx.createRadialGradient(moonX, moonY, moonR * 0.5, moonX, moonY, moonR * 2.8);
-    corona.addColorStop(0, c.moonGlow);
-    corona.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = corona;
+    // Soft outer corona (2 layers for depth)
+    const corona2 = ctx.createRadialGradient(moonX, moonY, moonR * 0.3, moonX, moonY, moonR * 3.5);
+    corona2.addColorStop(0, c.moonGlow);
+    corona2.addColorStop(0.5, c.moonGlow.replace(/[\d.]+\)$/, '0.08)'));
+    corona2.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = corona2;
     ctx.beginPath();
-    ctx.arc(moonX, moonY, moonR * 2.8, 0, Math.PI * 2);
+    ctx.arc(moonX, moonY, moonR * 3.5, 0, Math.PI * 2);
     ctx.fill();
 
+    // Moon body
     ctx.fillStyle = c.moonColor;
     ctx.shadowColor = c.moonGlow;
-    ctx.shadowBlur = 14;
+    ctx.shadowBlur = 20;
     ctx.beginPath();
     ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Subtle moon crescent depth
-    ctx.fillStyle = 'rgba(10, 15, 30, 0.40)';
+    // Crescent shadow — soft and subtle
+    ctx.fillStyle = 'rgba(8, 6, 28, 0.38)';
     ctx.beginPath();
-    ctx.arc(moonX - moonR * 0.35, moonY - moonR * 0.15, moonR * 0.85, 0, Math.PI * 2);
+    ctx.arc(moonX - moonR * 0.32, moonY - moonR * 0.12, moonR * 0.82, 0, Math.PI * 2);
     ctx.fill();
 
-    // 4. Parallax Starfield (Smooth Continuous Coordinates)
+    // ── 5. Parallax starfield — gentle twinkling, soft colors ──────────────
     this.bgStars.forEach(s => {
-      const twinkle = reduced ? 1 : (0.7 + Math.sin(this.frameCount * 0.035 + s.phase) * 0.3);
+      const twinkle = reduced ? 1 : (0.65 + Math.sin(t * 0.03 + s.phase) * 0.35);
       ctx.globalAlpha = s.alpha * twinkle * c.star;
       ctx.fillStyle = s.color || '#ffffff';
       ctx.fillRect(s.x, s.y, s.size, s.size);
     });
     ctx.globalAlpha = 1;
 
-    // 5. Shooting Stars / Meteor Streaks
+    // ── 6. Shooting stars / meteor streaks ─────────────────────────────────
     if (!reduced && this.state !== 'PAUSED') {
-      if (Math.random() < 0.008 && this.shootingStars.length < 2) {
+      if (Math.random() < 0.006 && this.shootingStars.length < 2) {
         this.shootingStars.push({
-          x: Math.random() * w * 0.8 + w * 0.2,
-          y: Math.random() * h * 0.25 + 20,
-          len: Math.random() * 45 + 35,
-          speed: Math.random() * 8 + 10,
+          x: Math.random() * w * 0.75 + w * 0.15,
+          y: Math.random() * h * 0.22 + 15,
+          len: Math.random() * 50 + 30,
+          speed: Math.random() * 7 + 8,
           alpha: 1.0
         });
       }
-
-      ctx.lineWidth = 1.8;
+      ctx.lineWidth = 1.5;
       for (let i = this.shootingStars.length - 1; i >= 0; i--) {
         const star = this.shootingStars[i];
         star.x -= star.speed;
-        star.y += star.speed * 0.45;
-        star.alpha -= 0.035;
-
+        star.y += star.speed * 0.4;
+        star.alpha -= 0.028;
         if (star.alpha <= 0 || star.x < -100 || star.y > h) {
           this.shootingStars.splice(i, 1);
           continue;
         }
-
-        const trail = ctx.createLinearGradient(star.x, star.y, star.x + star.len, star.y - star.len * 0.45);
-        trail.addColorStop(0, `rgba(255, 255, 255, ${star.alpha})`);
-        trail.addColorStop(1, 'rgba(0, 242, 254, 0)');
+        const trail = ctx.createLinearGradient(star.x, star.y, star.x + star.len, star.y - star.len * 0.4);
+        trail.addColorStop(0, `rgba(255,255,255,${star.alpha})`);
+        trail.addColorStop(1, 'rgba(255,255,255,0)');
         ctx.strokeStyle = trail;
         ctx.beginPath();
         ctx.moveTo(star.x, star.y);
-        ctx.lineTo(star.x + star.len, star.y - star.len * 0.45);
+        ctx.lineTo(star.x + star.len, star.y - star.len * 0.4);
         ctx.stroke();
       }
     }
 
-    // 6. Volumetric Layered Clouds
+    // ── 7. Soft volumetric clouds — puff clusters, fade in/out smoothly ────
     this.clouds.forEach(cl => {
-      ctx.save();
-      const cloudGrad = ctx.createLinearGradient(cl.x, cl.y - 30 * cl.scale, cl.x, cl.y + 20 * cl.scale);
-      cloudGrad.addColorStop(0, 'rgba(255, 255, 255, 0.09)');
-      cloudGrad.addColorStop(1, 'rgba(255, 255, 255, 0.02)');
-      ctx.fillStyle = cloudGrad;
+      // Fade clouds in when they enter from the right, out as they leave left
+      const fadeR = Math.min(1, (cl.x - (-120 * cl.scale)) / (80 * cl.scale));
+      const fadeL = Math.min(1, (w + 60 - cl.x) / (80 * cl.scale));
+      const cloudAlpha = Math.min(fadeR, fadeL);
+      if (cloudAlpha <= 0) return;
 
-      ctx.beginPath();
-      ctx.arc(cl.x, cl.y, 28 * cl.scale, 0, Math.PI * 2);
-      ctx.arc(cl.x + 22 * cl.scale, cl.y - 12 * cl.scale, 34 * cl.scale, 0, Math.PI * 2);
-      ctx.arc(cl.x + 48 * cl.scale, cl.y, 24 * cl.scale, 0, Math.PI * 2);
-      ctx.arc(cl.x + 28 * cl.scale, cl.y + 8 * cl.scale, 20 * cl.scale, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.save();
+      ctx.globalAlpha = cloudAlpha;
+
+      // Draw 4-5 overlapping soft circles per cloud for a fluffy watercolor feel
+      const puffs = [
+        { dx: 0,            dy: 0,            r: 28 * cl.scale },
+        { dx: 26 * cl.scale, dy: -13 * cl.scale, r: 34 * cl.scale },
+        { dx: 52 * cl.scale, dy: 0,            r: 25 * cl.scale },
+        { dx: 32 * cl.scale, dy: 9 * cl.scale,  r: 20 * cl.scale },
+        { dx: 14 * cl.scale, dy: 12 * cl.scale, r: 16 * cl.scale },
+      ];
+      puffs.forEach(p => {
+        const pGrad = ctx.createRadialGradient(
+          cl.x + p.dx, cl.y + p.dy, p.r * 0.1,
+          cl.x + p.dx, cl.y + p.dy, p.r
+        );
+        pGrad.addColorStop(0, 'rgba(255,255,255,0.09)');
+        pGrad.addColorStop(0.6, 'rgba(255,255,255,0.04)');
+        pGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = pGrad;
+        ctx.beginPath();
+        ctx.arc(cl.x + p.dx, cl.y + p.dy, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
       ctx.restore();
     });
 
-    // 7. Ambient Cyber Motes / Floating Stardust
+    // ── 8. Subtle ambient dust motes — barely visible, very calming ─────────
     if (!reduced) {
+      ctx.save();
       this.ambientMotes.forEach(m => {
-        const pulse = 0.5 + Math.sin(this.frameCount * 0.05 + m.phase) * 0.5;
+        const pulse = 0.4 + Math.sin(t * 0.04 + m.phase) * 0.4;
         ctx.fillStyle = m.color;
-        ctx.globalAlpha = m.alpha * pulse;
+        ctx.globalAlpha = m.alpha * pulse * 0.5; // keep subtle
         ctx.beginPath();
         ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
         ctx.fill();
       });
-      ctx.globalAlpha = 1;
+      ctx.restore();
     }
+
+    ctx.globalAlpha = 1;
   }
 
   drawHills() {
@@ -1378,65 +1429,99 @@ class FlappyGame {
     const w = this.width;
     const h = this.height;
 
-    // --- LAYER 1: Distant Majestic Mountains (Parallax 0.08x) ---
-    ctx.fillStyle = c.mountainFar;
-    ctx.beginPath();
-    ctx.moveTo(0, groundY);
-    const step1 = 16;
-    for (let x = 0; x <= w + step1; x += step1) {
-      const worldX = x + this.scrollFar;
-      const mH = Math.sin(worldX * 0.0032) * (h * 0.09) +
-                 Math.sin(worldX * 0.0078 + 1.4) * (h * 0.05) +
-                 Math.cos(worldX * 0.015 + 2.8) * (h * 0.025) +
-                 (h * 0.17);
-      ctx.lineTo(x, groundY - Math.max(15, mH));
-    }
-    ctx.lineTo(w, groundY);
-    ctx.closePath();
-    ctx.fill();
+    // Helper: draw a smooth Bézier hill silhouette using quadratic curves
+    // This produces perfectly smooth, continuous rounded hills — no steps, no lineTo jaggies
+    const drawHillLayer = (fillStyle, scrollX, freq1, amp1, freq2, amp2, baseH) => {
+      ctx.fillStyle = fillStyle;
+      ctx.beginPath();
+      ctx.moveTo(0, groundY);
+      // Sample points, then connect with quadratic curves for butter-smooth result
+      const step = 40;
+      const pts = [];
+      for (let x = -step; x <= w + step * 2; x += step) {
+        const wx = x + scrollX;
+        const y = groundY - baseH
+          - Math.sin(wx * freq1) * amp1
+          - Math.cos(wx * freq2 + 1.2) * amp2;
+        pts.push({ x, y });
+      }
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length - 1; i++) {
+        const mx = (pts[i].x + pts[i + 1].x) / 2;
+        const my = (pts[i].y + pts[i + 1].y) / 2;
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+      }
+      ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+      ctx.lineTo(w, groundY);
+      ctx.lineTo(0, groundY);
+      ctx.closePath();
+      ctx.fill();
+    };
 
-    // --- LAYER 2: Midground Cyber City Skyline & Spires (Parallax 0.22x) ---
-    ctx.fillStyle = c.skylineMid;
-    ctx.beginPath();
-    ctx.moveTo(0, groundY);
-    const step2 = 12;
-    for (let x = 0; x <= w + step2; x += step2) {
-      const worldX = x + this.scrollMid;
-      const sH = Math.sin(worldX * 0.0055 + 0.5) * (h * 0.065) +
-                 Math.cos(worldX * 0.012 + 1.8) * (h * 0.04) +
-                 (h * 0.11);
-      ctx.lineTo(x, groundY - Math.max(10, sH));
-    }
-    ctx.lineTo(w, groundY);
-    ctx.closePath();
-    ctx.fill();
+    // Layer 1: Distant soft mountains (barely perceptible parallax 0.08x, very gentle)
+    drawHillLayer(
+      c.mountainFar,
+      this.scrollFar,
+      0.0028, h * 0.10,
+      0.007,  h * 0.05,
+      h * 0.16
+    );
 
-    // Skyline subtle edge glow
-    ctx.strokeStyle = 'rgba(0, 242, 254, 0.08)';
-    ctx.lineWidth = 1.5;
+    // Layer 2: Mid-distance rolling hills (parallax 0.22x, gentle undulations)
+    drawHillLayer(
+      c.skylineMid,
+      this.scrollMid,
+      0.0048, h * 0.07,
+      0.011,  h * 0.035,
+      h * 0.09
+    );
+    // Soft rim light on mid hills — Alto's Odyssey style subtle edge glow
+    ctx.strokeStyle = c.aurora.replace(/[\d.]+\)$/, '0.12)');
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 
-    // --- LAYER 3: Foreground Rolling Cyber Hills (Parallax 0.50x) ---
-    ctx.fillStyle = c.hillNear;
-    ctx.beginPath();
-    ctx.moveTo(0, groundY);
-    const step3 = 10;
-    for (let x = 0; x <= w + step3; x += step3) {
-      const worldX = x + this.scrollNear;
-      const hH = Math.sin(worldX * 0.009 + 2.1) * (h * 0.045) +
-                 Math.cos(worldX * 0.018 + 0.9) * (h * 0.025) +
-                 (h * 0.065);
-      ctx.lineTo(x, groundY - Math.max(8, hH));
-    }
-    ctx.lineTo(w, groundY);
-    ctx.closePath();
-    ctx.fill();
-
-    // Hilltop neon rim light
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.10)';
-    ctx.lineWidth = 1.5;
+    // Layer 3: Foreground hills (parallax 0.50x, more pronounced)
+    drawHillLayer(
+      c.hillNear,
+      this.scrollNear,
+      0.008,  h * 0.048,
+      0.017,  h * 0.026,
+      h * 0.055
+    );
+    // Gentle white rim on foreground hills
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 1.0;
     ctx.stroke();
+
+    // ── Water shimmer strip — calm reflective water at base of hills ────────
+    const waterY = groundY - h * 0.032;
+    const waterGrad = ctx.createLinearGradient(0, waterY, 0, groundY);
+    waterGrad.addColorStop(0, c.waterTop || 'rgba(20,20,60,0.7)');
+    waterGrad.addColorStop(1, c.waterBot || 'rgba(8,8,28,0.95)');
+    ctx.fillStyle = waterGrad;
+    ctx.fillRect(0, waterY, w, groundY - waterY);
+
+    // Gentle ripple reflections
+    if (!Settings.get('reducedMotion')) {
+      ctx.save();
+      ctx.globalAlpha = 0.12;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 4; i++) {
+        const ry = waterY + (groundY - waterY) * (0.2 + i * 0.2);
+        const offset = (this.scrollGround * 0.15 + i * 37) % w;
+        ctx.beginPath();
+        for (let x = -offset; x < w + 30; x += 30) {
+          const wave = Math.sin((x + this.scrollGround * 0.2 + i * 18) * 0.055) * 3;
+          if (x === -offset) ctx.moveTo(x, ry + wave);
+          else ctx.lineTo(x, ry + wave);
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
   }
+  
 
   drawPipes() {
     const ctx = this.ctx;
