@@ -761,8 +761,15 @@
     });
     wire('sound-toggle', toggleSound);
     wire('help-toggle', () => { sounds.playClick(); openModal('help'); });
-    function openLeaderboardModal() {
+    function openLeaderboardModal(tab) {
       sounds.playClick();
+      const targetTab = typeof tab === 'string' ? tab : currentLeaderTab;
+      currentLeaderTab = targetTab;
+      leaderTabs.forEach(b => {
+        const on = b.dataset.tab === currentLeaderTab;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
       renderLeaderboard(currentLeaderTab);
       openModal('leaderboard');
       Leaderboard.fetchRemote().then(() => {
@@ -771,9 +778,9 @@
     }
 
     // Modal open buttons
-    wire('leaderboard-toggle', openLeaderboardModal);
-    wire('menu-leaderboard', openLeaderboardModal);
-    wire('gameover-leaderboard', openLeaderboardModal);
+    wire('leaderboard-toggle', () => openLeaderboardModal(game.mode));
+    wire('menu-leaderboard', () => openLeaderboardModal(game.mode));
+    wire('gameover-leaderboard', () => openLeaderboardModal(lastResult ? lastResult.mode : game.mode));
 
     wire('menu-help', () => { sounds.playClick(); openModal('help'); });
     wire('menu-settings', () => { sounds.playClick(); syncSettingsUI(); openModal('settings'); });

@@ -252,6 +252,8 @@ const Leaderboard = {
     // 2. Real-time Cloud sync to Firebase for all other PCs / Phones
     this._pushToFirebase(trimmed).catch(() => {});
 
+    try { window.dispatchEvent(new CustomEvent('ffms_leaderboard_synced')); } catch (e) {}
+
     const rankInMode = this.getEntries(mode).findIndex(e => e.name === cleanName && e.score === score && e.date === now) + 1;
     return { entry: newEntry, rank: rankInMode > 0 ? rankInMode : 1 };
   },

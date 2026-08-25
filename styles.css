@@ -6,6 +6,7 @@
    ========================================================================== */
 
 :root {
+  color-scheme: dark;
   --bg-dark: #090d16;
   --primary-red: #c0262d;
   --primary-red-glow: rgba(192, 38, 45, 0.5);
@@ -38,6 +39,32 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+/* Global Dark Glassmorphic Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.38);
+}
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0;
+  height: 0;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 html, body { width: 100%; height: 100%; }
@@ -1001,25 +1028,39 @@ input.switch:checked::after { transform: translateX(20px); }
 }
 
 #leaderboard-modal .menu-card {
-  max-height: min(88vh, 640px);
+  max-height: min(90vh, 660px);
 }
 
 .leaderboard-container {
   width: 100%;
-  max-height: min(48vh, 320px);
+  max-height: min(52vh, 370px);
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
-  margin-bottom: 8px;
-  padding-right: 2px;
+  scrollbar-color: rgba(0, 242, 254, 0.4) transparent;
+  margin-bottom: 6px;
+  padding-right: 4px;
 }
 .leaderboard-container::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
+}
+.leaderboard-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
 }
 .leaderboard-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 4px;
+  background: linear-gradient(180deg, var(--accent-cyan) 0%, rgba(0, 242, 254, 0.4) 100%);
+  border-radius: 999px;
+  box-shadow: 0 0 6px rgba(0, 242, 254, 0.3);
+}
+.leaderboard-container::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-cyan);
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.7);
+}
+.leaderboard-container::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0;
+  height: 0;
 }
 
 .leaderboard-list {
