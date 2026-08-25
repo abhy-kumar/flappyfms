@@ -190,7 +190,7 @@ const Leaderboard = {
             const combinedMap = new Map();
 
             [...DEFAULT_LEADERBOARD, ...local, ...list].forEach(entry => {
-              const key = `${entry.name}_${entry.mode}_${entry.score}`;
+              const key = `${entry.name}_${entry.mode}_${entry.score}_${entry.date || ''}`;
               if (!combinedMap.has(key)) combinedMap.set(key, entry);
             });
 
@@ -258,12 +258,46 @@ const Leaderboard = {
     return { entry: newEntry, rank: rankInMode > 0 ? rankInMode : 1 };
   },
 
-  async _pushToFirebase(list) {
+  async _pushToFirebase(localList) {
     try {
+      // Read-merge-write: fetch remote first to avoid overwriting other players
+      let merged = localList;
+      try {
+        const res = await fetch(FIREBASE_ENDPOINT, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        if (res.ok) {
+          let remoteData = await res.json();
+          if (remoteData) {
+            let remoteList = Array.isArray(remoteData)
+              ? remoteData
+              : Object.values(remoteData);
+            remoteList = remoteList.filter(
+              e => e && typeof e.name === 'string' && typeof e.score === 'number'
+            );
+            if (remoteList.length > 0) {
+              const combinedMap = new Map();
+              [...remoteList, ...localList].forEach(entry => {
+                const key = `${entry.name}_${entry.mode}_${entry.score}_${entry.date || ''}`;
+                if (!combinedMap.has(key)) combinedMap.set(key, entry);
+              });
+              merged = Array.from(combinedMap.values())
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 50);
+              // Update local cache with the merged result
+              Store.set('leaderboard', merged);
+            }
+          }
+        }
+      } catch (readErr) {
+        // If read fails, push local data as fallback
+        console.warn('Firebase read-before-write failed, pushing local:', readErr);
+      }
       await fetch(FIREBASE_ENDPOINT, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(list)
+        body: JSON.stringify(merged)
       });
     } catch (e) {
       console.warn('Firebase push note:', e);
@@ -271,7 +305,32 @@ const Leaderboard = {
   }
 };
 
-/* Auto-fetch remote scores on boot */
+/* Auto-fetch remote scores on boot + cross-tab sync listener */
 if (typeof window !== 'undefined') {
   setTimeout(() => Leaderboard.fetchRemote(), 800);
+
+  // Listen for scores broadcast from other tabs on the same device
+  if ('BroadcastChannel' in window) {
+    try {
+      const _syncChannel = new BroadcastChannel('ffms_leaderboard_sync');
+      _syncChannel.onmessage = (event) => {
+        if (event.data && event.data.type === 'NEW_SCORE' && event.data.entry) {
+          const entry = event.data.entry;
+          if (!entry.name || !entry.score) return;
+          const list = Store.get('leaderboard', DEFAULT_LEADERBOARD);
+          // Dedup check before adding
+          const key = `${entry.name}_${entry.mode}_${entry.score}_${entry.date || ''}`;
+          const exists = list.some(e =>
+            `${e.name}_${e.mode}_${e.score}_${e.date || ''}` === key
+          );
+          if (!exists) {
+            list.push(entry);
+            list.sort((a, b) => b.score - a.score);
+            Store.set('leaderboard', list.slice(0, 50));
+          }
+          try { window.dispatchEvent(new CustomEvent('ffms_leaderboard_synced')); } catch (e) {}
+        }
+      };
+    } catch (e) { /* BroadcastChannel not supported */ }
+  }
 }

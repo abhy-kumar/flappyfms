@@ -379,8 +379,12 @@
 
     let lastResult = null;
 
-    function handleGameOverFlow(d) {
+    async function handleGameOverFlow(d) {
       lastResult = d;
+
+      // Sync with cloud before checking qualification so we use fresh data
+      try { await Leaderboard.fetchRemote(); } catch (e) { /* use local cache */ }
+
       const topCheck = Leaderboard.checkTop10(d.score, d.mode);
 
       if (topCheck.qualifies) {
@@ -398,6 +402,16 @@
           } catch (e) {}
         }, 120);
       } else {
+        // Still record in the leaderboard pool (top 50) so the score isn't lost
+        if (d.score > 0) {
+          const name = Settings.get('pilotName') || 'FMS_Pilot';
+          Leaderboard.addEntry({
+            name: name,
+            score: d.score,
+            mode: d.mode,
+            medal: d.medal
+          });
+        }
         showGameOver(d);
       }
     }
@@ -795,6 +809,7 @@
 
     window.addEventListener('ffms_leaderboard_synced', () => {
       if (isOpen('leaderboard')) renderLeaderboard(currentLeaderTab);
+      renderModeCards();
     });
 
     // Close on dimmed backdrop click
