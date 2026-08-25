@@ -178,16 +178,64 @@
     const FLAP_KEYS = ['Space', 'ArrowUp', 'KeyW'];
 
     window.addEventListener('keydown', (e) => {
+      const target = e.target;
+      const isInput = target && (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      );
+
+      if (isInput) {
+        if (e.code === 'Escape') {
+          e.preventDefault();
+          const t = top();
+          if (t === 'entry') {
+            sounds.playClick();
+            closeModal('entry');
+            showGameOver(lastResult);
+            return;
+          }
+          if (t === 'help' || t === 'settings' || t === 'achievements' || t === 'leaderboard') {
+            sounds.playClick();
+            closeModal(t);
+            return;
+          }
+          if (t === 'pause') {
+            resumeGame();
+            return;
+          }
+          target.blur();
+        }
+        return;
+      }
+
       if (e.repeat && FLAP_KEYS.indexOf(e.code) !== -1) { e.preventDefault(); return; }
 
-      // Escape / P — pause, or close modal
-      if (e.code === 'Escape' || e.code === 'KeyP') {
+      // Escape — pause game or close active modal
+      if (e.code === 'Escape') {
         e.preventDefault();
         const t = top();
         if (t === 'pause') { resumeGame(); return; }
-        if (t === 'help' || t === 'settings' || t === 'achievements' || t === 'leaderboard') {
-          sounds.playClick(); closeModal(t); return;
+        if (t === 'entry') {
+          sounds.playClick();
+          closeModal('entry');
+          showGameOver(lastResult);
+          return;
         }
+        if (t === 'help' || t === 'settings' || t === 'achievements' || t === 'leaderboard') {
+          sounds.playClick();
+          closeModal(t);
+          return;
+        }
+        if (!anyOpen()) pauseGame();
+        return;
+      }
+
+      // P — pause or resume game only
+      if (e.code === 'KeyP') {
+        e.preventDefault();
+        const t = top();
+        if (t === 'pause') { resumeGame(); return; }
         if (!anyOpen()) pauseGame();
         return;
       }
@@ -338,8 +386,17 @@
       if (topCheck.qualifies) {
         $('entry-rank-text').textContent = `You earned Rank #${topCheck.rank} in ${d.modeLabel}!`;
         const savedName = Settings.get('pilotName') || 'FMS_Pilot';
-        $('pilot-name-input').value = savedName;
+        const nameInput = $('pilot-name-input');
+        if (nameInput) nameInput.value = savedName;
         openModal('entry', { focusDelay: 100 });
+        setTimeout(() => {
+          try {
+            if (nameInput) {
+              nameInput.focus();
+              nameInput.select();
+            }
+          } catch (e) {}
+        }, 120);
       } else {
         showGameOver(d);
       }
@@ -587,6 +644,13 @@
       Settings.set('pilotName', val);
       sounds.playClick();
       queueToast('<i class="fa-solid fa-id-badge"></i>', 'Call Sign Updated', val);
+    });
+
+    pilotInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        pilotInput.blur();
+      }
     });
 
     if (musicInput) {
