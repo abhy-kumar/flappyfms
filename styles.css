@@ -949,6 +949,20 @@ input.switch:checked::after { transform: translateX(20px); }
   display: inline-block;
 }
 
+.menu-version {
+  position: absolute;
+  bottom: calc(12px + var(--safe-b));
+  right: calc(16px + var(--safe-r));
+  font-family: var(--font-arcade);
+  font-size: 0.58rem;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.8px;
+  pointer-events: none;
+  user-select: none;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+  z-index: 10;
+}
+
 /* ==========================================================================
    PWA INSTALL BUTTON
    ========================================================================== */
