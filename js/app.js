@@ -320,9 +320,14 @@
       el.innerHTML =
         `<span class="pill-icon" aria-hidden="true">${PILL_META[key].icon}</span>` +
         `<span class="pill-label">${PILL_META[key].label}</span>` +
-        `<span class="pill-timer"><span class="pill-timer-bar"></span></span>`;
+        `<span class="pill-timer"><span class="pill-timer-bar"></span></span>` +
+        `<span class="pill-time-text"></span>`;
       pillBar.appendChild(el);
-      pills[key] = { el, bar: el.querySelector('.pill-timer-bar') };
+      pills[key] = {
+        el,
+        bar: el.querySelector('.pill-timer-bar'),
+        text: el.querySelector('.pill-time-text')
+      };
     });
 
     function renderPills(state) {
@@ -334,8 +339,12 @@
         if (key === 'shield') {
           p.el.classList.add('untimed');
         } else if (active) {
-          p.bar.style.width = Math.round(Math.max(0, Math.min(1, v.pct)) * 100) + '%';
-          p.el.classList.toggle('expiring', v.pct < 0.25);
+          const pct = Math.max(0, Math.min(1, v.pct || 0));
+          p.bar.style.width = Math.round(pct * 100) + '%';
+          if (p.text && v.remainingSec !== undefined) {
+            p.text.textContent = v.remainingSec.toFixed(1) + 's';
+          }
+          p.el.classList.toggle('expiring', pct < 0.25);
         }
       });
     }

@@ -248,13 +248,13 @@ body {
 .powerup-pill {
   display: none;
   align-items: center;
-  gap: 7px;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(8px);
-  padding: 5px 11px;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(10px);
+  padding: 6px 12px;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  font-size: 0.68rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.70rem;
   font-weight: 800;
   letter-spacing: 0.6px;
   color: #fff;
@@ -262,37 +262,66 @@ body {
 }
 .powerup-pill.visible { display: flex; }
 
-.pill-icon { font-size: 0.85rem; line-height: 1; }
-.pill-label { white-space: nowrap; }
+.pill-icon { font-size: 0.85rem; line-height: 1; display: flex; align-items: center; }
+.pill-label { white-space: nowrap; font-weight: 800; }
 
 .pill-timer {
-  width: 34px;
-  height: 4px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.18);
+  width: 44px;
+  height: 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   overflow: hidden;
   flex: none;
+  position: relative;
 }
-.pill-timer-bar,
-.pill-timer i {
+.pill-timer-bar {
   display: block;
   height: 100%;
   width: 100%;
-  background: currentColor;
   border-radius: 3px;
   transition: width 0.08s linear;
 }
-.powerup-pill.untimed .pill-timer { display: none; }
-.powerup-pill.expiring { animation: blinkPill 0.6s steps(2) infinite; }
 
-@keyframes blinkPill { 50% { opacity: 0.45; } }
+.pill-time-text {
+  font-family: var(--font-arcade);
+  font-size: 0.58rem;
+  min-width: 26px;
+  text-align: right;
+  opacity: 0.9;
+  letter-spacing: 0.5px;
+}
 
-.powerup-pill.shield { border-color: var(--accent-cyan);   color: var(--accent-cyan);   box-shadow: 0 0 10px var(--accent-cyan-glow); }
-.powerup-pill.slowmo { border-color: var(--accent-purple); color: var(--accent-purple); box-shadow: 0 0 10px rgba(168, 85, 247, 0.4); }
-.powerup-pill.magnet { border-color: var(--accent-pink);   color: var(--accent-pink);   box-shadow: 0 0 10px rgba(244, 63, 94, 0.4); }
-.powerup-pill.double { border-color: #22d3ee;              color: #22d3ee;              box-shadow: 0 0 10px rgba(34, 211, 238, 0.4); }
-.powerup-pill.ghost  { border-color: #e2e8f0;              color: #e2e8f0;              box-shadow: 0 0 10px rgba(226, 232, 240, 0.35); }
-.powerup-pill .pill-label, .powerup-pill .pill-icon { color: #fff; }
+.powerup-pill.untimed .pill-timer,
+.powerup-pill.untimed .pill-time-text { display: none; }
+.powerup-pill.expiring { animation: blinkPill 0.5s steps(2) infinite; }
+
+@keyframes blinkPill { 50% { opacity: 0.35; transform: scale(0.97); } }
+
+.powerup-pill.shield { border-color: var(--accent-cyan);   box-shadow: 0 0 12px var(--accent-cyan-glow); }
+.powerup-pill.shield .pill-icon { color: var(--accent-cyan); }
+
+.powerup-pill.slowmo { border-color: var(--accent-purple); box-shadow: 0 0 12px rgba(168, 85, 247, 0.45); }
+.powerup-pill.slowmo .pill-icon { color: var(--accent-purple); }
+.powerup-pill.slowmo .pill-timer-bar { background: linear-gradient(90deg, #a855f7, #c084fc); box-shadow: 0 0 6px #a855f7; }
+.powerup-pill.slowmo .pill-time-text { color: #c084fc; }
+
+.powerup-pill.magnet { border-color: var(--accent-pink);   box-shadow: 0 0 12px rgba(244, 63, 94, 0.45); }
+.powerup-pill.magnet .pill-icon { color: var(--accent-pink); }
+.powerup-pill.magnet .pill-timer-bar { background: linear-gradient(90deg, #f43f5e, #fb7185); box-shadow: 0 0 6px #f43f5e; }
+.powerup-pill.magnet .pill-time-text { color: #fb7185; }
+
+.powerup-pill.double { border-color: #22d3ee;              box-shadow: 0 0 12px rgba(34, 211, 238, 0.45); }
+.powerup-pill.double .pill-icon { color: #22d3ee; }
+.powerup-pill.double .pill-timer-bar { background: linear-gradient(90deg, #06b6d4, #22d3ee); box-shadow: 0 0 6px #22d3ee; }
+.powerup-pill.double .pill-time-text { color: #22d3ee; }
+
+.powerup-pill.ghost  { border-color: #e2e8f0;              box-shadow: 0 0 12px rgba(226, 232, 240, 0.35); }
+.powerup-pill.ghost .pill-icon { color: #e2e8f0; }
+.powerup-pill.ghost .pill-timer-bar { background: linear-gradient(90deg, #94a3b8, #f8fafc); box-shadow: 0 0 6px #fff; }
+.powerup-pill.ghost .pill-time-text { color: #e2e8f0; }
+
+.powerup-pill .pill-label { color: #fff; }
 
 @keyframes slideInLeft {
   from { opacity: 0; transform: translateX(-20px); }

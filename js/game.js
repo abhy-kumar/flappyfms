@@ -1046,10 +1046,26 @@ class FlappyGame {
   powerupSnapshot() {
     return {
       shield: this.active.shield,
-      slowmo: { active: this.active.slowmo > 0, pct: this.active.slowmo / (POWERUPS.slowmo.duration * 60) },
-      magnet: { active: this.active.magnet > 0, pct: this.active.magnet / (POWERUPS.magnet.duration * 60) },
-      double: { active: this.active.double > 0, pct: this.active.double / (POWERUPS.double.duration * 60) },
-      ghost:  { active: this.active.ghost  > 0, pct: this.active.ghost  / (POWERUPS.ghost.duration  * 60) }
+      slowmo: {
+        active: this.active.slowmo > 0,
+        pct: this.active.slowmo / (POWERUPS.slowmo.duration * 60),
+        remainingSec: Math.max(0, this.active.slowmo / 60)
+      },
+      magnet: {
+        active: this.active.magnet > 0,
+        pct: this.active.magnet / (POWERUPS.magnet.duration * 60),
+        remainingSec: Math.max(0, this.active.magnet / 60)
+      },
+      double: {
+        active: this.active.double > 0,
+        pct: this.active.double / (POWERUPS.double.duration * 60),
+        remainingSec: Math.max(0, this.active.double / 60)
+      },
+      ghost: {
+        active: this.active.ghost > 0,
+        pct: this.active.ghost / (POWERUPS.ghost.duration * 60),
+        remainingSec: Math.max(0, this.active.ghost / 60)
+      }
     };
   }
 
