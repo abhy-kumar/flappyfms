@@ -671,17 +671,25 @@ class FlappyGame {
     this.distance += speed * 0.12;
 
     // --- timed power-ups (stored in steps, decremented once per step) ---
+    let timedActive = false;
+    let timedJustExpired = false;
     ['slowmo', 'magnet', 'double', 'ghost'].forEach(key => {
       if (this.active[key] > 0) {
         this.active[key]--;
-        if (this.active[key] === 0) {
-          this.emit('powerups', this.powerupSnapshot());
+        if (this.active[key] > 0) {
+          timedActive = true;
+        } else {
+          timedJustExpired = true;
           if (key === 'slowmo' && typeof sounds !== 'undefined' && sounds.setTempoModifier) {
             sounds.setTempoModifier(1.0);
           }
         }
       }
     });
+
+    if (timedActive || timedJustExpired) {
+      this.emit('powerups', this.powerupSnapshot());
+    }
 
     if (this.active.slowmo > 0 && typeof sounds !== 'undefined' && sounds.setTempoModifier) {
       sounds.setTempoModifier(0.65);
@@ -738,6 +746,7 @@ class FlappyGame {
           this.active.shield = false;
           this.shieldSaves++;
           this.combo = 0;
+          pipe.alive = false;
           pipe.passed = true;
           this.pipes.splice(i, 1);
           sounds.playShieldBreak();
@@ -775,6 +784,7 @@ class FlappyGame {
         p.x = p.pipe.x + p.pipe.width / 2;
         p.y = p.pipe.gapY + p.pipe.gapHeight / 2;
       } else {
+        if (p.pipe && !p.pipe.alive) p.pipe = null;
         p.x -= speed;
       }
 

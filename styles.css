@@ -273,12 +273,14 @@ body {
   overflow: hidden;
   flex: none;
 }
+.pill-timer-bar,
 .pill-timer i {
   display: block;
   height: 100%;
   width: 100%;
   background: currentColor;
   border-radius: 3px;
+  transition: width 0.08s linear;
 }
 .powerup-pill.untimed .pill-timer { display: none; }
 .powerup-pill.expiring { animation: blinkPill 0.6s steps(2) infinite; }
