@@ -230,7 +230,7 @@
   <link rel="apple-touch-icon" href="bird.png">
 
   <link rel="preload" href="bird.png" as="image">
-  <link rel="preload" href="styles.css?v=2.5" as="style">
+  <link rel="preload" href="styles.css?v=2.7" as="style">
 
   <!-- Preconnects for CDN & Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -238,7 +238,7 @@
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="styles.css?v=2.5">
+  <link rel="stylesheet" href="styles.css?v=2.7">
   <!-- Font Awesome 6 Free -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 
@@ -665,16 +665,16 @@
   <!-- ================================================================
        SCRIPTS (Deferred for non-blocking rendering)
        ================================================================ -->
-  <script defer src="js/store.js?v=2.4"></script>
-  <script defer src="js/audio.js?v=2.4"></script>
-  <script defer src="js/game.js?v=2.4"></script>
-  <script defer src="js/app.js?v=2.4"></script>
+  <script defer src="js/store.js?v=2.7"></script>
+  <script defer src="js/audio.js?v=2.7"></script>
+  <script defer src="js/game.js?v=2.7"></script>
+  <script defer src="js/app.js?v=2.7"></script>
 
   <!-- PWA Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=2.4')
+        navigator.serviceWorker.register('./sw.js?v=2.7')
           .then((reg) => {
             reg.update();
             console.log('PWA Service Worker active:', reg.scope);
